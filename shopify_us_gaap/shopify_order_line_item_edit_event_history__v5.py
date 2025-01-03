@@ -158,12 +158,12 @@ df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_p
 
 # 2
 # for test 测试订单
-test_orders = ['SHO.1109', 'SHO.7307', 'SHO.13117', 'SHO.14244', 'SHO.18067', 'SHO.18078', 'SHO.17441']
+# test_orders = ['SHO.1109', 'SHO.7307', 'SHO.13117', 'SHO.14244', 'SHO.18067', 'SHO.18078', 'SHO.17441']
 
-df_physical_product_added = df_physical_product_added[df_physical_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
-df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
-df_shipment = df_shipment[df_shipment['order_name'].isin(test_orders)].reset_index(drop=True)
-df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_physical_product_added = df_physical_product_added[df_physical_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_shipment = df_shipment[df_shipment['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
 
 
 # 3
@@ -303,7 +303,7 @@ def get_shipping_line_if_order_first_shipment(row):
             new_data = pd.DataFrame({
                 'unique_identifier': matching_shipping_lines['unique_identifier'].values,
                 'if_assigned': [True] * len(matching_shipping_lines),
-                'shipment_unique_identifier': [row['unique_identifier'].values[0]] * len(matching_shipping_lines)
+                'shipment_unique_identifier': [row['unique_identifier'][0]] * len(matching_shipping_lines)
             })
             df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True)
             # 生成新的invoice line
