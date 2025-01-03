@@ -2,8 +2,8 @@
 # coding: utf-8
 
 
-#1
-#data cleaning
+# 1
+# data cleaning
 
 import os
 import pandas as pd
@@ -156,8 +156,8 @@ df_quickbooks_products = pd.read_excel(
 df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_product_removed, df_warranty_removed], axis=0, ignore_index=True)
 
 
-#2
-#for test 测试订单
+# 2
+# for test 测试订单
 test_orders = ['SHO.1109', 'SHO.7307', 'SHO.13117', 'SHO.14244', 'SHO.18067', 'SHO.18078', 'SHO.17441']
 
 df_physical_product_added = df_physical_product_added[df_physical_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
@@ -166,12 +166,12 @@ df_shipment = df_shipment[df_shipment['order_name'].isin(test_orders)].reset_ind
 df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
 
 
-#3
-#创建tag文件来记录每一行的处理情况,并找到本次需要处理的记录有哪些（去除已处理的记录）
-#如果这个文件已经存在就不再新建
+# 3
+# 创建tag文件来记录每一行的处理情况,并找到本次需要处理的记录有哪些（去除已处理的记录）
+# 如果这个文件已经存在就不再新建
 
-#if_processed用来标记这一条记录是否在for循环中被读取处理过，在for循环的哪一步标记为processed呢？
-#以订单为单位标记为processed
+# if_processed用来标记这一条记录是否在for循环中被读取处理过，在for循环的哪一步标记为processed呢？
+# 以订单为单位标记为processed
 
 def create_or_load_file(file_path, file_columns):
     
@@ -261,8 +261,8 @@ df_unprocessed_orders = df_unprocessed_events[['order_name']].drop_duplicates().
 df_unprocessed_orders_sorted = df_unprocessed_orders.sort_values(by='order_name', ascending=True)
 
 
-#4
-#主体逻辑
+# 4
+# 主体逻辑
 
 def mark_tag(df_tag, row, tag_column, related_unique_identifier_column=None, related_unique_identifier_row=None):
     if related_unique_identifier_column == None:
@@ -299,14 +299,14 @@ def get_shipping_line_if_order_first_shipment(row):
         if not matching_shipping_lines.empty:
             # 计算invoice里面shipping的金额填多少
             first_shipment_total_shipping = matching_shipping_lines['total_price_in_usd'].sum()
-            #标记df_shipping_line_tag
+            # 标记df_shipping_line_tag
             new_data = pd.DataFrame({
                 'unique_identifier': matching_shipping_lines['unique_identifier'].values,
                 'if_assigned': [True] * len(matching_shipping_lines),
                 'shipment_unique_identifier': [row['unique_identifier'].values[0]] * len(matching_shipping_lines)
             })
             df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True)
-            #生成新的invoice line
+            # 生成新的invoice line
             new_row = pd.DataFrame({
                 'order_name': [row['order_name']],
                 'order_id': [row['order_id']],
@@ -791,7 +791,7 @@ def process_events(event_list):
             elif row['line_type'] == 'CUSTOM_PRODUCT':
                 df_custom_product_removed_tag = mark_tag(df_custom_product_removed_tag, row, 'if_processed')
 
-                #优先去找未被shipped的order
+                # 优先去找未被shipped的order
                 unshipped_matching_orders = df_custom_product_added[
                     (df_custom_product_added['order_id'] == row['order_id']) &
                     (df_custom_product_added['line_item_name'] == row['line_item_name']) &
@@ -875,7 +875,7 @@ def process_events(event_list):
             elif row['line_type'] == 'WARRANTY':
                 df_warranty_removed_tag = mark_tag(df_warranty_removed_tag, row, 'if_processed')
 
-                #优先去找未被shipped的order
+                # 优先去找未被shipped的order
                 unshipped_matching_orders = df_warranty_added[
                     (df_warranty_added['order_id'] == row['order_id']) &
                     (df_warranty_added['line_item_name'] == row['line_item_name']) &
@@ -956,8 +956,8 @@ def process_events(event_list):
                     df_credit_memo = pd.concat([df_credit_memo, new_row], ignore_index=True)
 
 
-#5
-#处理过程
+# 5
+# 处理过程
 
 for index, row in df_unprocessed_orders_sorted.iterrows():
     df_unprocessed_order_events = df_unprocessed_events[(df_unprocessed_events['order_name'] == row['order_name'])]
