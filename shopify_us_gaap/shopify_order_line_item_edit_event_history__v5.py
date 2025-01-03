@@ -313,7 +313,7 @@ def get_shipping_line_if_order_first_shipment(row):
                 'order_created_at_pdt': [row['order_created_at_pdt']],
                 'transaction_type': ["invoice"],
                 'line_type': ["SHIPPING"],
-                'transaction_date': [row['event_happened_date_pdt']],
+                'transaction_date': [row['event_happened_at_pdt'].date()],
                 'shipping': [first_shipment_total_shipping],
                 'unique_identifier': [row['unique_identifier']], # 记录这个shipping line是跟着哪一个shipment走的
                 'if_sent': [False]
