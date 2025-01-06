@@ -324,19 +324,21 @@ def get_shipping_line_if_order_first_shipment(row):
                 'shipment_unique_identifier': [row['unique_identifier']] * len(matching_shipping_lines)
             })
             df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True)
-            # 生成新的invoice line
-            new_row = pd.DataFrame({
-                'order_name': [row['order_name']],
-                'order_id': [row['order_id']],
-                'order_created_at_pdt': [row['order_created_at_pdt']],
-                'transaction_type': ["invoice"],
-                'line_type': ["SHIPPING"],
-                'transaction_date': [row['event_happened_at_pdt'].date()],
-                'shipping': [first_shipment_total_shipping],
-                'unique_identifier': [row['unique_identifier']], # 记录这个shipping line是跟着哪一个shipment走的
-                'if_sent': [False]
-            })
-            df_invoice = pd.concat([df_invoice, new_row], ignore_index=True, sort=False)
+            
+            if first_shipment_total_shipping > 0:
+                # 生成新的invoice line
+                new_row = pd.DataFrame({
+                    'order_name': [row['order_name']],
+                    'order_id': [row['order_id']],
+                    'order_created_at_pdt': [row['order_created_at_pdt']],
+                    'transaction_type': ["invoice"],
+                    'line_type': ["SHIPPING"],
+                    'transaction_date': [row['event_happened_at_pdt'].date()],
+                    'shipping': [first_shipment_total_shipping],
+                    'unique_identifier': [row['unique_identifier']], # 记录这个shipping line是跟着哪一个shipment走的
+                    'if_sent': [False]
+                })
+                df_invoice = pd.concat([df_invoice, new_row], ignore_index=True, sort=False)
             
 def generate_shipping_journal_entry():
     global df_journal_entry, df_invoice, df_shipping_line, df_shipping_line_tag
