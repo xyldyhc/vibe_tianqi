@@ -156,7 +156,7 @@ df_quickbooks_products = pd.read_excel(
 df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_product_removed, df_warranty_removed], axis=0, ignore_index=True)
 
 
-# 2
+# 2-1
 # for test 测试订单
 # test_orders = ['SHO.1109', 'SHO.7307', 'SHO.13117', 'SHO.14244', 'SHO.18067', 'SHO.18078', 'SHO.17441']
 
@@ -164,6 +164,23 @@ df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_p
 # df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
 # df_shipment = df_shipment[df_shipment['order_name'].isin(test_orders)].reset_index(drop=True)
 # df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
+
+
+# 2-2
+# 选择日期范围内的订单
+df_all_events_for_date_filter = pd.concat([df_shipment, df_shipping_line, df_physical_product_added, df_physical_product_removed, df_custom_product_added, df_custom_product_removed, df_warranty_removed, df_warranty_added], axis=0, ignore_index=True)
+date_range = pd.date_range(start='2024-09-01', end='2024-09-30')
+order_id_update_range = df_all_events_for_date_filter[df_all_events_for_date_filter['event_happened_at_pdt'].isin(date_range)]['order_id'].unique()
+
+df_all_events = df_all_events[df_all_events['order_id'].isin(order_id_update_range)]
+df_shipment = df_shipment[df_shipment['order_id'].isin(order_id_update_range)]
+df_shipping_line = df_shipping_line[df_shipping_line['order_id'].isin(order_id_update_range)]
+df_physical_product_added = df_physical_product_added[df_physical_product_added['order_id'].isin(order_id_update_range)]
+df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_id'].isin(order_id_update_range)]
+df_custom_product_added = df_custom_product_added[df_custom_product_added['order_id'].isin(order_id_update_range)]
+df_custom_product_removed = df_custom_product_removed[df_custom_product_removed['order_id'].isin(order_id_update_range)]
+df_warranty_removed = df_warranty_removed[df_warranty_removed['order_id'].isin(order_id_update_range)]
+df_warranty_added = df_warranty_added[df_warranty_added['order_id'].isin(order_id_update_range)]
 
 
 # 3
@@ -276,7 +293,7 @@ def mark_tag(df_tag, row, tag_column, related_unique_identifier_column=None, rel
                 'unique_identifier': [row['unique_identifier']],
                 tag_column: [True]
             })
-            df_tag = pd.concat([df_tag, new_row], ignore_index=True)
+            df_tag = pd.concat([df_tag, new_row], ignore_index=True, sort=False)
     else:
         if row['unique_identifier'] in df_tag['unique_identifier'].values:
             df_tag.loc[
@@ -289,7 +306,7 @@ def mark_tag(df_tag, row, tag_column, related_unique_identifier_column=None, rel
                 tag_column: [True],
                 related_unique_identifier_column: [related_unique_identifier_row['unique_identifier']]
             })
-            df_tag = pd.concat([df_tag, new_row], ignore_index=True)
+            df_tag = pd.concat([df_tag, new_row], ignore_index=True, sort=False)
     return df_tag
 
 def get_shipping_line_if_order_first_shipment(row):
@@ -318,7 +335,7 @@ def get_shipping_line_if_order_first_shipment(row):
                 'unique_identifier': [row['unique_identifier']], # 记录这个shipping line是跟着哪一个shipment走的
                 'if_sent': [False]
             })
-            df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
+            df_invoice = pd.concat([df_invoice, new_row], ignore_index=True, sort=False)
             
 def generate_shipping_journal_entry():
     global df_journal_entry, df_invoice, df_shipping_line, df_shipping_line_tag
@@ -373,7 +390,7 @@ def generate_shipping_journal_entry():
             new_row = pd.DataFrame({
                 'transaction_type': ["journal_entry"],
                 'currency': ["USD United States Dollar"],
-                'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"],
+                'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"], # SP是shipping的缩写
                 'transaction_date': [row['event_happened_date_pdt']],
                 'account': ["11220100 Accounts Receivable (A/R)"],
                 'debits': [None],
@@ -389,7 +406,7 @@ def generate_shipping_journal_entry():
             new_row = pd.DataFrame({
                 'transaction_type': ["journal_entry"],
                 'currency': ["USD United States Dollar"],
-                'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"],
+                'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"], # SP是shipping的缩写
                 'transaction_date': [row['event_happened_date_pdt']],
                 'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
                 'debits': [row['total_shipping']],
@@ -409,7 +426,7 @@ def generate_shipping_journal_entry():
         'if_assigned': [True] * len(matching_shipping_lines),
         'shipment_unique_identifier': [None] * len(matching_shipping_lines)
     })
-    df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True)
+    df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True, sort=False)
     
 
 def get_line_item_discount(order_line, shipment_row=None, if_check_first_board_needed=False):
@@ -815,10 +832,10 @@ def process_events(event_list):
 
                 # 如果没有找到未被shipped的order，只能匹配已shipped的order
                 else:
-                    shipped_matching_orders = df_custom_product_added_tag[
-                        (df_custom_product_added_tag['order_id'] == row['order_id']) &
-                        (df_custom_product_added_tag['line_item_name'] == row['line_item_name']) &
-                        (df_custom_product_added_tag['line_item_id'] == row['line_item_id']) &
+                    shipped_matching_orders = df_custom_product_added[
+                        (df_custom_product_added['order_id'] == row['order_id']) &
+                        (df_custom_product_added['line_item_name'] == row['line_item_name']) &
+                        (df_custom_product_added['line_item_id'] == row['line_item_id']) &
                         (df_custom_product_added['event_happened_at_pdt'] <= row['event_happened_at_pdt']) &
                         (df_custom_product_added['unique_identifier'].isin(
                             df_custom_product_added_tag[df_custom_product_added_tag['if_shipped'] == True]['unique_identifier']
@@ -953,7 +970,7 @@ def process_events(event_list):
                         'unique_identifier': [row['unique_identifier']],
                         'if_sent': [False]
                     })
-                    df_credit_memo = pd.concat([df_credit_memo, new_row], ignore_index=True)
+                    df_credit_memo = pd.concat([df_credit_memo, new_row], ignore_index=True, sort=False)
 
 
 # 5
