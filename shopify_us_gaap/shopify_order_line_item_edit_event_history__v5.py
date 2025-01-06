@@ -235,8 +235,8 @@ df_shipment_tag = create_or_load_file(
 )
 
 df_shipping_line_tag = create_or_load_file(
-    'shipment_tag.xlsx', 
-    ['unique_identifier', 'if_assigned', 'shipment_unique_identifier']
+    'shipping_line_tag.xlsx', 
+    ['unique_identifier', 'if_processed', 'if_assigned', 'shipment_unique_identifier']
 )
 
 df_invoice = create_or_load_file(
@@ -342,7 +342,7 @@ def generate_shipping_journal_entry():
     global df_journal_entry, df_invoice, df_shipping_line, df_shipping_line_tag
     matching_shipping_lines = df_shipping_line[
         (~df_shipping_line['unique_identifier'].isin(
-            df_shipping_line_tag[df_shipping_line_tag['if_assigned'] == True]['unique_identifier'])
+            df_shipping_line_tag[df_shipping_line_tag['if_processed'] == True]['unique_identifier'])
         ) &
         (df_shipping_line['order_name'].isin(df_invoice['order_name']))
     ]
@@ -992,6 +992,8 @@ for index, row in df_unprocessed_orders_sorted.iterrows():
     df_warranty_removed_tag.to_excel('warranty_removed_tag.xlsx', index=False)
     df_shipping_line_tag.to_excel('shipping_line_tag.xlsx', index=False)
     df_shipment_tag.to_excel('shipment_tag.xlsx', index=False)
+    df_credit_memo['if_sent'] = True
+    df_credit_memo.to_excel('credit_memo.xlsx', index=False)
     df_invoice['if_sent'] = True
     df_invoice.to_excel('invoice.xlsx', index=False)
     
