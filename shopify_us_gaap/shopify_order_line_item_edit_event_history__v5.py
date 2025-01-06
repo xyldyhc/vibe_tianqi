@@ -169,7 +169,7 @@ df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_p
 # 2-2
 # 选择日期范围内的订单
 df_all_events_for_date_filter = pd.concat([df_shipment, df_shipping_line, df_physical_product_added, df_physical_product_removed, df_custom_product_added, df_custom_product_removed, df_warranty_removed, df_warranty_added], axis=0, ignore_index=True)
-date_range = pd.date_range(start='2024-09-01', end='2024-09-30')
+date_range = pd.date_range(start='2024-09-01', end='2024-09-30').date()
 order_id_update_range = df_all_events_for_date_filter[df_all_events_for_date_filter['event_happened_at_pdt'].isin(date_range)]['order_id'].unique()
 
 df_all_events = df_all_events[df_all_events['order_id'].isin(order_id_update_range)]
