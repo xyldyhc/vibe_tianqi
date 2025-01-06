@@ -169,8 +169,8 @@ df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_p
 # 2-2
 # 选择日期范围内的订单
 df_all_events_for_date_filter = pd.concat([df_shipment, df_shipping_line, df_physical_product_added, df_physical_product_removed, df_custom_product_added, df_custom_product_removed, df_warranty_removed, df_warranty_added], axis=0, ignore_index=True)
-date_range = pd.date_range(start='2024-09-01', end='2024-09-30').date()
-order_id_update_range = df_all_events_for_date_filter[df_all_events_for_date_filter['event_happened_at_pdt'].isin(date_range)]['order_id'].unique()
+date_range = pd.date_range(start='2024-09-01', end='2024-09-30').date
+order_id_update_range = df_all_events_for_date_filter[df_all_events_for_date_filter['event_happened_at_pdt'].dt.date.isin(date_range)]['order_id'].unique()
 
 df_all_events = df_all_events[df_all_events['order_id'].isin(order_id_update_range)]
 df_shipment = df_shipment[df_shipment['order_id'].isin(order_id_update_range)]
@@ -319,8 +319,9 @@ def get_shipping_line_if_order_first_shipment(row):
             # 标记df_shipping_line_tag
             new_data = pd.DataFrame({
                 'unique_identifier': matching_shipping_lines['unique_identifier'].values,
+                'if_processed': [True] * len(matching_shipping_lines),
                 'if_assigned': [True] * len(matching_shipping_lines),
-                'shipment_unique_identifier': [row['unique_identifier'][0]] * len(matching_shipping_lines)
+                'shipment_unique_identifier': [row['unique_identifier']] * len(matching_shipping_lines)
             })
             df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True)
             # 生成新的invoice line
@@ -423,7 +424,8 @@ def generate_shipping_journal_entry():
     # 这里想一想一个一个订单能不能分步标记，不要一次性标记
     new_data = pd.DataFrame({
         'unique_identifier': matching_shipping_lines['unique_identifier'].values,
-        'if_assigned': [True] * len(matching_shipping_lines),
+        'if_assigned': [False] * len(matching_shipping_lines),
+        'if_processed': [True] * len(matching_shipping_lines),
         'shipment_unique_identifier': [None] * len(matching_shipping_lines)
     })
     df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True, sort=False)
