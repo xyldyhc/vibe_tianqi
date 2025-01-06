@@ -347,88 +347,89 @@ def generate_shipping_journal_entry():
         (df_shipping_line['order_name'].isin(df_invoice['order_name']))
     ]
     
+    if not matching_shipping_lines.empty:
     # 计算journal entry的金额
-    results = matching_shipping_lines.groupby(['order_name', 'order_number', 'customer_name', 'store', 'event_happened_date_pdt'])['total_price_in_usd'].sum().reset_index()
-    results.columns = ['order_name', 'order_number', 'customer_name', 'store', 'event_happened_date_pdt', 'total_shipping']
+        results = matching_shipping_lines.groupby(['order_name', 'order_number', 'customer_name', 'store', 'event_happened_date_pdt'])['total_price_in_usd'].sum().reset_index()
+        results.columns = ['order_name', 'order_number', 'customer_name', 'store', 'event_happened_date_pdt', 'total_shipping']
     
-    for index, row in results.iterrows():
-        # 如果shipping是正值，即income
-        if row['total_shipping'] > 0 :
-            new_row = pd.DataFrame({
-                'transaction_type': ["journal_entry"],
-                'currency': ["USD United States Dollar"],
-                'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"],
-                'transaction_date': [row['event_happened_date_pdt']],
-                'account': ["11220100 Accounts Receivable (A/R)"],
-                'debits': [row['total_shipping']],
-                'credits': [None],
-                'description': [f"Shipping income for {row['order_name']}"],
-                'name': [row['customer_name']],
-                'store': [row['store']],
-                'unique_identifier': [None],
-                'if_sent': [False]
-            })
-            df_journal_entry = pd.concat([df_journal_entry, new_row], ignore_index=True)
-            
-            new_row = pd.DataFrame({
-                'transaction_type': ["journal_entry"],
-                'currency': ["USD United States Dollar"],
-                'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"],
-                'transaction_date': [row['event_happened_date_pdt']],
-                'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
-                'debits': [None],
-                'credits': [row['total_shipping']],
-                'description': [f"Shipping income for {row['order_name']}"],
-                'name': [row['customer_name']],
-                'store': [row['store']],
-                'unique_identifier': [None],
-                'if_sent': [False]
-            })
-            df_journal_entry = pd.concat([df_journal_entry, new_row], ignore_index=True)
-            
-        # 如果shipping是负值，即refund
-        elif row['total_shipping'] < 0 :
-            new_row = pd.DataFrame({
-                'transaction_type': ["journal_entry"],
-                'currency': ["USD United States Dollar"],
-                'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"], # SP是shipping的缩写
-                'transaction_date': [row['event_happened_date_pdt']],
-                'account': ["11220100 Accounts Receivable (A/R)"],
-                'debits': [None],
-                'credits': [row['total_shipping']],
-                'description': [f"Shipping refund for {row['order_name']}"],
-                'name': [row['customer_name']],
-                'store': [row['store']],
-                'unique_identifier': [None],
-                'if_sent': [False]
-            })
-            df_journal_entry = pd.concat([df_journal_entry, new_row], ignore_index=True)
-            
-            new_row = pd.DataFrame({
-                'transaction_type': ["journal_entry"],
-                'currency': ["USD United States Dollar"],
-                'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"], # SP是shipping的缩写
-                'transaction_date': [row['event_happened_date_pdt']],
-                'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
-                'debits': [row['total_shipping']],
-                'credits': [None],
-                'description': [f"Shipping refund for {row['order_name']}"],
-                'name': [row['customer_name']],
-                'store': [row['store']],
-                'unique_identifier': [None],
-                'if_sent': [False]
-            })
-            df_journal_entry = pd.concat([df_journal_entry, new_row], ignore_index=True)
+        for index, row in results.iterrows():
+            # 如果shipping是正值，即income
+            if row['total_shipping'] > 0 :
+                new_row = pd.DataFrame({
+                    'transaction_type': ["journal_entry"],
+                    'currency': ["USD United States Dollar"],
+                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"],
+                    'transaction_date': [row['event_happened_date_pdt']],
+                    'account': ["11220100 Accounts Receivable (A/R)"],
+                    'debits': [row['total_shipping']],
+                    'credits': [None],
+                    'description': [f"Shipping income for {row['order_name']}"],
+                    'name': [row['customer_name']],
+                    'store': [row['store']],
+                    'unique_identifier': [None],
+                    'if_sent': [False]
+                })
+                df_journal_entry = pd.concat([df_journal_entry, new_row], ignore_index=True)
+                
+                new_row = pd.DataFrame({
+                    'transaction_type': ["journal_entry"],
+                    'currency': ["USD United States Dollar"],
+                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"],
+                    'transaction_date': [row['event_happened_date_pdt']],
+                    'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
+                    'debits': [None],
+                    'credits': [row['total_shipping']],
+                    'description': [f"Shipping income for {row['order_name']}"],
+                    'name': [row['customer_name']],
+                    'store': [row['store']],
+                    'unique_identifier': [None],
+                    'if_sent': [False]
+                })
+                df_journal_entry = pd.concat([df_journal_entry, new_row], ignore_index=True)
+                
+            # 如果shipping是负值，即refund
+            elif row['total_shipping'] < 0 :
+                new_row = pd.DataFrame({
+                    'transaction_type': ["journal_entry"],
+                    'currency': ["USD United States Dollar"],
+                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"], # SP是shipping的缩写
+                    'transaction_date': [row['event_happened_date_pdt']],
+                    'account': ["11220100 Accounts Receivable (A/R)"],
+                    'debits': [None],
+                    'credits': [row['total_shipping']],
+                    'description': [f"Shipping refund for {row['order_name']}"],
+                    'name': [row['customer_name']],
+                    'store': [row['store']],
+                    'unique_identifier': [None],
+                    'if_sent': [False]
+                })
+                df_journal_entry = pd.concat([df_journal_entry, new_row], ignore_index=True)
+                
+                new_row = pd.DataFrame({
+                    'transaction_type': ["journal_entry"],
+                    'currency': ["USD United States Dollar"],
+                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"], # SP是shipping的缩写
+                    'transaction_date': [row['event_happened_date_pdt']],
+                    'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
+                    'debits': [row['total_shipping']],
+                    'credits': [None],
+                    'description': [f"Shipping refund for {row['order_name']}"],
+                    'name': [row['customer_name']],
+                    'store': [row['store']],
+                    'unique_identifier': [None],
+                    'if_sent': [False]
+                })
+                df_journal_entry = pd.concat([df_journal_entry, new_row], ignore_index=True)
     
-    # 标记df_shipping_line_tag
-    # 这里想一想一个一个订单能不能分步标记，不要一次性标记
-    new_data = pd.DataFrame({
-        'unique_identifier': matching_shipping_lines['unique_identifier'].values,
-        'if_assigned': [False] * len(matching_shipping_lines),
-        'if_processed': [True] * len(matching_shipping_lines),
-        'shipment_unique_identifier': [None] * len(matching_shipping_lines)
-    })
-    df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True, sort=False)
+        # 标记df_shipping_line_tag
+        # 这里想一想一个一个订单能不能分步标记，不要一次性标记
+        new_data = pd.DataFrame({
+            'unique_identifier': matching_shipping_lines['unique_identifier'].values,
+            'if_assigned': [False] * len(matching_shipping_lines),
+            'if_processed': [True] * len(matching_shipping_lines),
+            'shipment_unique_identifier': [None] * len(matching_shipping_lines)
+        })
+        df_shipping_line_tag = pd.concat([df_shipping_line_tag, new_data], ignore_index=True, sort=False)
     
 
 def get_line_item_discount(order_line, shipment_row=None, if_check_first_board_needed=False):
