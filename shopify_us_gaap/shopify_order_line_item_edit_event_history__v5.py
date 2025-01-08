@@ -598,19 +598,19 @@ def generate_custom_product_invoice():
         (~df_custom_product_added['unique_identifier'].isin(
             df_custom_product_added_tag[df_custom_product_added_tag['if_refunded'] == True]['unique_identifier'])
         )
-    ]['order_name'].unique()
+    ]['order_id'].unique()
 
     df_physical_product_included_orders = df_physical_product_added[
         (~df_physical_product_added['unique_identifier'].isin(
             df_physical_product_added_tag[df_physical_product_added_tag['if_refunded'] == True]['unique_identifier'])
         )
-    ]['order_name'].unique()
+    ]['order_id'].unique()
 
     no_shipment_needed_orders = df_custom_product_included_orders[~np.isin(df_custom_product_included_orders, df_physical_product_included_orders)]
     
     # 找到所有符合条件的custom products
     matching_custom_products_added = df_custom_product_added[
-        ((df_custom_product_added['order_name'].isin(df_invoice['order_name'])) | (df_custom_product_added['order_name'].isin(no_shipment_needed_orders))) &
+        ((df_custom_product_added['order_id'].isin(df_invoice['order_id'])) | (df_custom_product_added['order_id'].isin(no_shipment_needed_orders))) &
         (~df_custom_product_added['unique_identifier'].isin(
             df_custom_product_added_tag[df_custom_product_added_tag['if_shipped'] == True]['unique_identifier'])
         ) &
