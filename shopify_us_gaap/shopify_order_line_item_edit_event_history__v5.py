@@ -7,6 +7,7 @@
 
 import os
 import pandas as pd
+import numpy as np
 
 default_sheet_name = 'sheet1'
 
@@ -583,11 +584,33 @@ def get_custom_product_if_order_first_shipment(shipment_row):
 
 # 分步处理不是first shipment的custom product，因为它们需要在refund标记完成之后再决定要不要发送invoice
 # 如果在发送invoice之前就退款了，那就可以直接不出现任何记录
+# 这一步生成的invoice包含两个部分，一个是已经发生过shipment的订单如果后续新加入的custom product，另一个是完全不包含physical product的订单内的所有custom product
 def generate_custom_product_invoice():
-    global df_line_item_discount, df_invoice, df_custom_product_added, df_custom_product_added_tag
+    global df_line_item_discount
+    global df_invoice
+    global df_custom_product_added
+    global df_custom_product_added_tag
+    global df_physical_product_added
+    global df_physical_product_added_tag
+
+    # 找到订单内全部是custom product的订单
+    df_custom_product_included_orders = df_custom_product_added[
+        (~df_custom_product_added['unique_identifier'].isin(
+            df_custom_product_added_tag[df_custom_product_added_tag['if_refunded'] == True]['unique_identifier'])
+        )
+    ]['order_id'].unique()
+
+    df_physical_product_included_orders = df_physical_product_added[
+        (~df_physical_product_added['unique_identifier'].isin(
+            df_physical_product_added_tag[df_physical_product_added_tag['if_refunded'] == True]['unique_identifier'])
+        )
+    ]['order_id'].unique()
+
+    no_shipment_needed_orders = df_custom_product_included_orders[~np.isin(df_custom_product_included_orders, df_physical_product_included_orders)]
+    
     # 找到所有符合条件的custom products
     matching_custom_products_added = df_custom_product_added[
-        (df_custom_product_added['order_name'].isin(df_invoice['order_name'])) &
+        ((df_custom_product_added['order_name'].isin(df_invoice['order_name'])) | (df_custom_product_added['order_name'].isin(no_shipment_needed_orders))) &
         (~df_custom_product_added['unique_identifier'].isin(
             df_custom_product_added_tag[df_custom_product_added_tag['if_shipped'] == True]['unique_identifier'])
         ) &
