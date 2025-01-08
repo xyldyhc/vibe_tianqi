@@ -1067,6 +1067,7 @@ for index, row in df_unprocessed_orders_sorted.iterrows():
     df_invoice['if_sent'] = True
     df_invoice.to_excel('invoice.xlsx', index=False)
     
+# generate_shipping_journal_entry必须要在generate_custom_product_invoice之后执行
 generate_custom_product_invoice()
 generate_shipping_journal_entry()
 df_physical_product_added_tag.to_excel('physical_product_added_tag.xlsx', index=False)
