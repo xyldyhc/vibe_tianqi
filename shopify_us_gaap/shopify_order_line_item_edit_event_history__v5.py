@@ -255,41 +255,60 @@ df_physical_product_added_tag = create_or_load_file(
     'physical_product_added_tag.xlsx', 
     ['unique_identifier', 'if_shipped', 'shipment_unique_identifier', 'if_refunded', 'refund_unique_identifier']
 )
+# if_shipped标记这一行是否被发送过invoice
+# shipment_unique_identifier标记这一行有没有被匹配到shipment
+# if_refunded标记这一行是否被退款
 
 df_physical_product_removed_tag = create_or_load_file(
     'physical_product_removed_tag.xlsx',
     ['unique_identifier', 'if_processed', 'if_assigned', 'order_unique_identifier']
 )
+# if_processed标记这一行是否被处理过
+# if_assigned标记这一行是否被分配到order记录（理论上是一定会分配到的）
 
 df_custom_product_added_tag = create_or_load_file(
     'custom_product_added_tag.xlsx', 
     ['unique_identifier', 'if_shipped', 'shipment_unique_identifier', 'if_refunded', 'refund_unique_identifier']
 )
+# if_shipped标记这一行是否被发送过invoice
+# shipment_unique_identifier标记这一行是否被发送invoice的时候是否是和first shipment一起发送的
+# if_refunded标记这一行是否被退款
 
 df_custom_product_removed_tag = create_or_load_file(
     'custom_product_removed_tag.xlsx',
     ['unique_identifier', 'if_processed', 'if_assigned', 'order_unique_identifier']
 )
+# if_processed标记这一行是否被处理过
+# if_assigned标记这一行是否被分配到order记录（理论上是一定会分配到的）
 
 df_warranty_added_tag = create_or_load_file(
     'warranty_added_tag.xlsx', 
     ['unique_identifier', 'if_shipped', 'shipment_unique_identifier', 'if_refunded', 'refund_unique_identifier']
 )
+# if_shipped标记这一行是否被发送过invoice
+# shipment_unique_identifier标记这一行是否被发送invoice的时候是否是和first shipment一起发送的
+# if_refunded标记这一行是否被退款
 
 df_warranty_removed_tag = create_or_load_file(
     'warranty_removed_tag.xlsx',
     ['unique_identifier', 'if_processed', 'if_assigned', 'order_unique_identifier']
 )
+# if_processed标记这一行是否被处理过
+# if_assigned标记这一行是否被分配到order记录（理论上是一定会分配到的）
 
 df_shipment_tag = create_or_load_file(
     'shipment_tag.xlsx', 
     ['unique_identifier', 'if_processed', 'if_assigned', 'order_unique_identifier']
 )
+# if_processed标记这一行是否被处理过
+# if_assigned标记这一行是否被分配到order记录；如果if_assigned为空值且if_processed为True的话，说明这个shipment是在下单之前发生的pre-shipment
 
 df_shipping_line_tag = create_or_load_file(
     'shipping_line_tag.xlsx', 
     ['unique_identifier', 'if_processed', 'if_assigned', 'shipment_unique_identifier']
 )
+# if_processed标记这一行是否在invoice里发送了
+# if_assigned标记这一行shipping是否是和shipment一起发送的，还是在journal entry里发送的
 
 df_invoice = create_or_load_file(
     'invoice.xlsx', 
