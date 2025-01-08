@@ -598,13 +598,13 @@ def generate_custom_product_invoice():
         (~df_custom_product_added['unique_identifier'].isin(
             df_custom_product_added_tag[df_custom_product_added_tag['if_refunded'] == True]['unique_identifier'])
         )
-    ]['order_id'].unique()
+    ]['order_name'].unique()
 
     df_physical_product_included_orders = df_physical_product_added[
         (~df_physical_product_added['unique_identifier'].isin(
             df_physical_product_added_tag[df_physical_product_added_tag['if_refunded'] == True]['unique_identifier'])
         )
-    ]['order_id'].unique()
+    ]['order_name'].unique()
 
     no_shipment_needed_orders = df_custom_product_included_orders[~np.isin(df_custom_product_included_orders, df_physical_product_included_orders)]
     
