@@ -199,10 +199,15 @@ test_orders = [
 
 
 
+df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
+df_shipment = df_shipment[df_shipment['order_name'].isin(test_orders)].reset_index(drop=True)
+df_shipping_line = df_shipping_line[df_shipping_line['order_name'].isin(test_orders)].reset_index(drop=True)
 df_physical_product_added = df_physical_product_added[df_physical_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
 df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
-df_shipment = df_shipment[df_shipment['order_name'].isin(test_orders)].reset_index(drop=True)
-df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
+df_custom_product_added = df_custom_product_added[df_custom_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
+df_custom_product_removed = df_custom_product_removed[df_custom_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
+df_warranty_added = df_warranty_added[df_warranty_added['order_name'].isin(test_orders)].reset_index(drop=True)
+df_warranty_removed = df_warranty_removed[df_warranty_removed['order_name'].isin(test_orders)].reset_index(drop=True)
 
 
 # 2-2
@@ -218,8 +223,8 @@ df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].res
 # df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_id'].isin(order_id_update_range)]
 # df_custom_product_added = df_custom_product_added[df_custom_product_added['order_id'].isin(order_id_update_range)]
 # df_custom_product_removed = df_custom_product_removed[df_custom_product_removed['order_id'].isin(order_id_update_range)]
-# df_warranty_removed = df_warranty_removed[df_warranty_removed['order_id'].isin(order_id_update_range)]
 # df_warranty_added = df_warranty_added[df_warranty_added['order_id'].isin(order_id_update_range)]
+# df_warranty_removed = df_warranty_removed[df_warranty_removed['order_id'].isin(order_id_update_range)]
 
 
 # 3
