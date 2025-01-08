@@ -182,7 +182,11 @@ test_orders = [
     'SHO.19830',
     'SHO.21214',
     'SHO.19830',
-    'SHO.15134'
+    'SHO.15134',
+    'SHO.8915',
+    'SHO.14094',
+    'SHO.16860',
+    'SHO.17405'
 ]
 # SHO.1109：订单下了v1 board和custom product。有一条shipping。没有任何发货记录。应该全部没有相关记录。
 # SHO.7307：订单下了5个产品，有1个产品未发货。有3个产品（包含1个未发货的产品）叠加了两种discount。
@@ -196,6 +200,10 @@ test_orders = [
 # SHO.21214：全部是custom product并且还有custom product的return。有一行shipping line。
 # SHO.19830：全部是custom product并且还有custom product的return
 # SHO.15134：同时下单了physical product和custom product。伴有custom product的return
+# SHO.8915：下单了warranty和custom product
+# SHO.14094：下单了warranty，并且给这个item退款了
+# SHO.16860：下单了warranty
+# SHO.17405：下单了warranty
 
 
 
@@ -611,11 +619,11 @@ def generate_custom_product_invoice():
         )
     ]['order_id'].unique()
 
-    no_shipment_needed_orders = df_custom_product_included_orders[~np.isin(df_custom_product_included_orders, df_physical_product_included_orders)]
+    no_physical_product_orders = df_custom_product_included_orders[~np.isin(df_custom_product_included_orders, df_physical_product_included_orders)]
     
     # 找到所有符合条件的custom products
     matching_custom_products_added = df_custom_product_added[
-        ((df_custom_product_added['order_id'].isin(df_invoice['order_id'])) | (df_custom_product_added['order_id'].isin(no_shipment_needed_orders))) &
+        ((df_custom_product_added['order_id'].isin(df_invoice['order_id'])) | (df_custom_product_added['order_id'].isin(no_physical_product_orders))) &
         (~df_custom_product_added['unique_identifier'].isin(
             df_custom_product_added_tag[df_custom_product_added_tag['if_shipped'] == True]['unique_identifier'])
         ) &
@@ -675,7 +683,98 @@ def generate_custom_product_invoice():
             })
             df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
             
-# def get_warranty_product(row):
+# def get_warranty_if_board_shipment(row):
+#     global df_warranty_added
+#     global df_warranty_removed
+#     global df_warranty_added_tag
+#     global df_warranty_removed_tag
+#     global df_invoice
+#     global df_shipment
+#     global df_shipment_tag
+    
+def generate_warranty_invoice_if_no_physical_product_order():
+    global df_line_item_discount
+    global df_warranty_added
+    global df_warranty_added_tag
+    global df_invoice
+
+    # 找到下单产品里没有需要发货的physical product的订单
+    df_warranty_included_orders = df_warranty_added[
+        (~df_warranty_added['unique_identifier'].isin(
+            df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
+        )
+    ]['order_id'].unique()
+
+    df_physical_product_included_orders = df_physical_product_added[
+        (~df_physical_product_added['unique_identifier'].isin(
+            df_physical_product_added_tag[df_physical_product_added_tag['if_refunded'] == True]['unique_identifier'])
+        )
+    ]['order_id'].unique()
+
+    no_physical_product_orders = df_warranty_included_orders[~np.isin(df_warranty_included_orders, df_physical_product_included_orders)]
+    no_physical_product_orders = pd.Series(no_physical_product_orders)
+
+    # 如果找到符合条件的订单
+    if not no_physical_product_orders.empty:
+        matching_warranties_added = df_warranty_added[
+            (df_warranty_added['order_id'].isin(no_physical_product_orders)) &
+            (~df_warranty_added['unique_identifier'].isin(
+                df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
+            ) &
+            (~df_warranty_added['unique_identifier'].isin(
+                df_warranty_added_tag[df_warranty_added_tag['if_shipped'] == True]['unique_identifier'])
+            )
+        ]
+
+        if not matching_warranties_added.empty:
+            for index, warranty_added_row in matching_warranties_added.iterrows():
+                # 标记df_warranty_added_tag的if_shipped
+                df_warranty_added_tag = mark_tag(df_warranty_added_tag, warranty_added_row, 'if_shipped')
+
+                # 找到这个custom_product的discount值
+                total_line_item_discount, item_discount_type = get_line_item_discount(warranty_added_row)
+
+                # 生成invocie
+                new_row = pd.DataFrame({
+                    'order_name': [warranty_added_row['order_name']],
+                    'order_id': [warranty_added_row['order_id']],
+                    'order_created_at_pdt': [warranty_added_row['order_created_at_pdt']],
+                    'transaction_type': ["invoice"],
+                    'transaction_name': [f"{warranty_added_row['order_number']}-{warranty_added_row['event_happened_at_pdt'].date()}"],
+                    'line_type': [warranty_added_row['line_type']],
+                    'store': [warranty_added_row['store']],
+                    'transaction_date': [warranty_added_row['event_happened_at_pdt'].date()],
+                    'ship_from': [None],
+                    'shipping_date': [None],
+                    'ship_via': [None],
+                    'tracking_number': [None],
+                    'payment_terms': [warranty_added_row['payment_terms']],
+                    'due_date': [warranty_added_row['due_date']],
+                    'customer_name': [warranty_added_row['customer_name']],
+                    'customer_email': [warranty_added_row['customer_email']],
+                    'customer_phone_number': [warranty_added_row['customer_phone_number']],
+                    'shipping_country': [warranty_added_row['shipping_country']],
+                    'shipping_province': [warranty_added_row['shipping_province']],
+                    'shipping_city': [warranty_added_row['shipping_city']],
+                    'shipping_zip': [warranty_added_row['shipping_zip']],
+                    'shipping_address': [warranty_added_row['shipping_address']],
+                    'billing_country': [warranty_added_row['billing_country']],
+                    'billing_province': [warranty_added_row['billing_province']],
+                    'billing_city': [warranty_added_row['billing_city']],
+                    'billing_zip': [warranty_added_row['billing_zip']],
+                    'billing_address': [warranty_added_row['billing_address']],
+                    'transaction_product_name': [warranty_added_row['line_item_name']],
+                    'qty': [1],
+                    'rate': [warranty_added_row['unit_price_in_usd']],
+                    'amount': [warranty_added_row['unit_price_in_usd']],
+                    'taxable': [warranty_added_row['taxable']],
+                    'discount': [total_line_item_discount],
+                    'discount_reallocation_target': [item_discount_type],
+                    'shipping': [None],
+                    'unique_identifier': [warranty_added_row['unique_identifier']],
+                    'if_sent': [False]
+                })
+                df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
     
 def process_events(event_list):
     global df_physical_product_added_tag
@@ -708,7 +807,7 @@ def process_events(event_list):
             # 先处理shipping_line和custom product
             get_shipping_line_if_order_first_shipment(row)
             get_custom_product_if_order_first_shipment(row)
-#             get_warranty_if_board_shipment(row)
+            # get_warranty_if_board_shipment(row)
             
             # 找符合条件的order：
             matching_orders = df_physical_product_added[
@@ -1067,8 +1166,9 @@ for index, row in df_unprocessed_orders_sorted.iterrows():
     df_invoice['if_sent'] = True
     df_invoice.to_excel('invoice.xlsx', index=False)
     
-# generate_shipping_journal_entry必须要在generate_custom_product_invoice之后执行，否则全是custom product的订单的shipping会在下一次run的时候才会生成
+# generate_shipping_journal_entry必须要在generate_custom_product_invoice和get_warranty_if_no_shipment_needed_order之后执行，否则全是custom product/warranty的订单的shipping会在下一次run的时候才会生成
 generate_custom_product_invoice()
+generate_warranty_invoice_if_no_physical_product_order()
 generate_shipping_journal_entry()
 df_physical_product_added_tag.to_excel('physical_product_added_tag.xlsx', index=False)
 df_physical_product_removed_tag.to_excel('physical_product_removed_tag.xlsx', index=False)
