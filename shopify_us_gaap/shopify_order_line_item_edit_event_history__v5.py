@@ -404,8 +404,8 @@ def generate_shipping_journal_entry():
                 new_row = pd.DataFrame({
                     'transaction_type': ["journal_entry"],
                     'currency': ["USD United States Dollar"],
-                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"],
-                    'transaction_date': [row['event_happened_date_pdt']],
+                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"],
+                    'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account': ["11220100 Accounts Receivable (A/R)"],
                     'debits': [row['total_shipping']],
                     'credits': [None],
@@ -420,8 +420,8 @@ def generate_shipping_journal_entry():
                 new_row = pd.DataFrame({
                     'transaction_type': ["journal_entry"],
                     'currency': ["USD United States Dollar"],
-                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"],
-                    'transaction_date': [row['event_happened_date_pdt']],
+                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"],
+                    'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
                     'debits': [None],
                     'credits': [row['total_shipping']],
@@ -438,8 +438,8 @@ def generate_shipping_journal_entry():
                 new_row = pd.DataFrame({
                     'transaction_type': ["journal_entry"],
                     'currency': ["USD United States Dollar"],
-                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"], # SP是shipping的缩写
-                    'transaction_date': [row['event_happened_date_pdt']],
+                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"], # SP是shipping的缩写
+                    'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account': ["11220100 Accounts Receivable (A/R)"],
                     'debits': [None],
                     'credits': [row['total_shipping']],
@@ -454,8 +454,8 @@ def generate_shipping_journal_entry():
                 new_row = pd.DataFrame({
                     'transaction_type': ["journal_entry"],
                     'currency': ["USD United States Dollar"],
-                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt']}"], # SP是shipping的缩写
-                    'transaction_date': [row['event_happened_date_pdt']],
+                    'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"], # SP是shipping的缩写
+                    'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
                     'debits': [row['total_shipping']],
                     'credits': [None],
