@@ -183,7 +183,7 @@ test_orders = [
     'SHO.21214',
     'SHO.19830',
     'SHO.15134',
-    'SHO.8915',
+    'SHO.8951',
     'SHO.14094',
     'SHO.16860',
     'SHO.17405'
@@ -200,7 +200,7 @@ test_orders = [
 # SHO.21214：全部是custom product并且还有custom product的return。有一行shipping line。
 # SHO.19830：全部是custom product并且还有custom product的return
 # SHO.15134：同时下单了physical product和custom product。伴有custom product的return
-# SHO.8915：下单了warranty和custom product
+# SHO.8951：下单了warranty和custom product
 # SHO.14094：下单了warranty，并且给这个item退款了
 # SHO.16860：下单了warranty
 # SHO.17405：下单了warranty
