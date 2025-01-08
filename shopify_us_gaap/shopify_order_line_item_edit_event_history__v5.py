@@ -308,7 +308,7 @@ df_shipping_line_tag = create_or_load_file(
     ['unique_identifier', 'if_processed', 'if_assigned', 'shipment_unique_identifier']
 )
 # if_processed标记这一行是否在invoice里发送了
-# if_assigned标记这一行shipping是否是和shipment一起发送的，还是在journal entry里发送的
+# if_assigned标记这一行shipping是否是和first shipment一起发送的，还是在journal entry里发送的
 
 df_invoice = create_or_load_file(
     'invoice.xlsx', 
