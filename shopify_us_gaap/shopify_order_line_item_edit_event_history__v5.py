@@ -937,7 +937,7 @@ def generate_warranty_invoice_if_no_physical_product_order():
                 })
                 df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
 
-def generate_warranty_invoice_if_added_after_all_shipment():
+def generate_warranty_invoice_if_added_after_all_board_shipment():
     global df_invoice
     global df_line_item_discount
     global df_warranty_added
@@ -976,7 +976,7 @@ def process_events(event_list):
             # 先处理shipping_line和custom product
             get_shipping_line_if_order_first_shipment(row)
             get_custom_product_if_order_first_shipment(row)
-            # get_warranty_if_board_shipment(row)
+            get_warranty_if_board_shipment(row)
             
             # 找符合条件的order：
             matching_orders = df_physical_product_added[
@@ -1353,7 +1353,7 @@ generate_warranty_invoice_if_no_physical_product_order()
 # 但是在后续自动化传输的场景下，订单可能每天都在发生编辑行为。如果这个订单选错的warranty是在所有shipment发完之后才去订单里改成正确的，那这个正确的warranty的invoice什么时候生成呢？
 # 需要在最后把warranty added作为event单独处理一下
 # 如果所有board的发货都已经完成，那么在这个订单的最后一个board的shipment发生之后加入的所有warranty都用它被加入的时间传invoice
-generate_warranty_invoice_if_added_after_shipment()
+generate_warranty_invoice_if_added_after_all_board_shipment()
 generate_shipping_journal_entry()
 df_physical_product_added_tag.to_excel('physical_product_added_tag.xlsx', index=False)
 df_physical_product_removed_tag.to_excel('physical_product_removed_tag.xlsx', index=False)
