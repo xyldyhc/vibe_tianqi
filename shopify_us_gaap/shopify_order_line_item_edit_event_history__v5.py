@@ -718,6 +718,8 @@ def get_warranty_if_board_shipment(row):
     global df_line_item_discount
 
     # 如果这个shipment的产品是board
+    # ！！！！！！
+    # 如果是ref board呢？
     if 'board' in row['product_name'].lower():
         matching_warranties_added = df_warranty_added[
             (df_warranty_added['order_id'] == row['order_id']) &
