@@ -186,7 +186,9 @@ test_orders = [
     'SHO.8951',
     'SHO.14094',
     'SHO.16860',
-    'SHO.17405'
+    'SHO.17405',
+    'SHO.19411',
+    'SHO.18158'
 ]
 # SHO.1109：订单下了v1 board和custom product。有一条shipping。没有任何发货记录。应该全部没有相关记录。
 # SHO.7307：订单下了5个产品，有1个产品未发货。有3个产品（包含1个未发货的产品）叠加了两种discount。
@@ -196,7 +198,7 @@ test_orders = [
 # SHO.18078：下单了1个板子和1个支架，还有1个能map到板子的warranty。下单后全部完成了发货（此时应该有3条invoice）。然后把下单的3样东西全退款了（此时应该生成warranty的credit memo），又重新加了回来（此时生成新加进来的warranty的invoice）。
 # SHO.17441：0元的influencer订单
 # SHO.16785：全部是custom product的订单
-# SHO.17441 - SHO.19830：所有有两条及以上的shipping line的订单
+# SHO.17441 - SHO.19830：有两条及以上的shipping line的订单
 # SHO.21214：全部是custom product并且还有custom product的return。有一行shipping line。
 # SHO.19830：全部是custom product并且还有custom product的return
 # SHO.15134：同时下单了physical product和custom product。伴有custom product的return
@@ -204,7 +206,8 @@ test_orders = [
 # SHO.14094：下单了warranty，并且给这个item退款了
 # SHO.16860：下单了warranty
 # SHO.17405：下单了warranty
-
+# SHO.19411：有能map到的warranty
+# SHO.18158：有不能map到的warranty
 
 
 df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
@@ -220,7 +223,7 @@ df_warranty_removed = df_warranty_removed[df_warranty_removed['order_name'].isin
 
 # 2-2
 # 选择日期范围内的订单
-# df_all_events_for_date_filter = pd.concat([df_shipment, df_shipping_line, df_physical_product_added, df_physical_product_removed, df_custom_product_added, df_custom_product_removed, df_warranty_removed, df_warranty_added], axis=0, ignore_index=True)
+# df_all_events_for_date_filter = pd.concat([df_shipment, df_shipping_line, df_physical_product_added, df_physical_product_removed, df_custom_product_added, df_custom_product_removed, df_warranty_added, df_warranty_removed], axis=0, ignore_index=True)
 # date_range = pd.date_range(start='2024-09-01', end='2024-09-30').date
 # order_id_update_range = df_all_events_for_date_filter[df_all_events_for_date_filter['event_happened_at_pdt'].dt.date.isin(date_range)]['order_id'].unique()
 
@@ -319,8 +322,8 @@ df_invoice = create_or_load_file(
      'discount_reallocation_target', 'shipping', 'unique_identifier', 'if_sent'
     ]
 )
-# 不同的line_type会对应不同的unique_identifier
-# PRODUCT对应shipment_unique_identifier(还是order_unique_identifier呢？保持df_invoice里仍然是unique的值)，CUSTOM_PRODUCT对应order_unique_identifier, WARRANTY对应order_unique_identifier，SHIPPING对应shipment_unique_identifier
+# df_invoice里的不同的line_type会对应不同的unique_identifier，df_invoice里的line_type+unique_identifier也是unique的
+# PRODUCT对应shipment_unique_identifier，CUSTOM_PRODUCT对应order_unique_identifier, WARRANTY对应order_unique_identifier，SHIPPING对应shipment_unique_identifier，PRODUCT PRE-SHIPPED对应shipment_unique_identifier
 
 df_credit_memo = create_or_load_file(
     'credit_memo.xlsx', 
@@ -383,7 +386,12 @@ def mark_tag(df_tag, row, tag_column, related_unique_identifier_column=None, rel
 def get_shipping_line_if_order_first_shipment(row):
     global df_invoice, df_shipping_line, df_shipping_line_tag
     if row['order_name'] not in df_invoice['order_name'].values:
-        matching_shipping_lines = df_shipping_line[df_shipping_line['order_name'] == row['order_name']]
+    # 不需要筛选df_invoice['line_type'] == 'PRODUCT'
+        matching_shipping_lines = df_shipping_line[
+            (df_shipping_line['order_name'] == row['order_name']) &
+            (df_shipping_line['event_happened_at_pdt'] <= row['event_happened_at_pdt']) &
+            (~df_shipping_line['unique_identifier'].isin(df_shipping_line_tag[df_shipping_line_tag['if_processed'] == True]['unique_identifier']))
+        ]
         if not matching_shipping_lines.empty:
             # 计算invoice里面shipping的金额填多少
             first_shipment_total_shipping = matching_shipping_lines['total_price_in_usd'].sum()
@@ -406,7 +414,7 @@ def get_shipping_line_if_order_first_shipment(row):
                     'line_type': ["SHIPPING"],
                     'transaction_date': [row['event_happened_at_pdt'].date()],
                     'shipping': [first_shipment_total_shipping],
-                    'unique_identifier': [row['unique_identifier']], # 记录这个shipping line是跟着哪一个shipment走的
+                    'unique_identifier': [row['unique_identifier']], # 记录这个shipping line是跟着哪一个shipment走的，在把shipping填写进invoice的时候也是用这一个值去匹配PRODUCT的invoice
                     'if_sent': [False]
                 })
                 df_invoice = pd.concat([df_invoice, new_row], ignore_index=True, sort=False)
@@ -553,6 +561,7 @@ def get_custom_product_if_order_first_shipment(shipment_row):
     if shipment_row['order_name'] not in df_invoice['order_name'].values:
         matching_custom_products_added = df_custom_product_added[
             (df_custom_product_added['order_name'] == shipment_row['order_name']) &
+            (df_custom_product_added['event_happened_at_pdt'] <= shipment_row['event_happened_at_pdt']) &
             (~df_custom_product_added['unique_identifier'].isin(
                 df_custom_product_added_tag[df_custom_product_added_tag['if_shipped'] == True]['unique_identifier'])
             ) &
@@ -702,15 +711,148 @@ def generate_custom_product_invoice():
             })
             df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
             
-# def get_warranty_if_board_shipment(row):
-#     global df_warranty_added
-#     global df_warranty_removed
-#     global df_warranty_added_tag
-#     global df_warranty_removed_tag
-#     global df_invoice
-#     global df_shipment
-#     global df_shipment_tag
-    
+def get_warranty_if_board_shipment(row):
+    global df_warranty_added
+    global df_warranty_added_tag
+    global df_invoice
+    global df_line_item_discount
+
+    # 如果这个shipment的产品是board
+    if 'board' in row['product_name'].lower():
+        matching_warranties_added = df_warranty_added[
+            (df_warranty_added['order_id'] == row['order_id']) &
+            (df_warranty_added['warranty_source_product_name'] == row['product_name']) &
+            (df_warranty_added['event_happened_at_pdt'] <= row['event_happened_at_pdt']) &
+            (~df_warranty_added['unique_identifier'].isin(
+                df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
+            ) &
+            (~df_warranty_added['unique_identifier'].isin(
+                df_warranty_added_tag[df_warranty_added_tag['if_shipped'] == True]['unique_identifier'])
+            )
+        ]
+
+        # 如果找到了能map到的warranty
+        if not matching_warranties_added.empty:
+            min_value = matching_warranties_added['physical_product_unit_idx'].min()
+            warranty_assigned_to_shipment = matching_warranties_added[matching_warranties_added['physical_product_unit_idx'] == min_value]
+            # 筛选出来的结果中physical_product_unit_idx是unique的，取min筛选出来的只有一行值
+
+            # 标记df_warranty_added_tag的if_shipped
+            df_warranty_added_tag = mark_tag(df_warranty_added_tag, warranty_assigned_to_shipment, 'if_shipped', 'shipment_unique_identifier', row)
+
+            # 找到这个warranty的discount值
+            total_line_item_discount, item_discount_type = get_line_item_discount(warranty_assigned_to_shipment)
+
+            # 生成invocie
+            new_row = pd.DataFrame({
+                'order_name': [warranty_assigned_to_shipment['order_name']],
+                'order_id': [warranty_assigned_to_shipment['order_id']],
+                'order_created_at_pdt': [warranty_assigned_to_shipment['order_created_at_pdt']],
+                'transaction_type': ["invoice"],
+                'transaction_name': [f"{warranty_assigned_to_shipment['order_number']}-{row['package_id']}"],
+                'line_type': [warranty_assigned_to_shipment['line_type']],
+                'store': [warranty_assigned_to_shipment['store']],
+                'transaction_date': [row['event_happened_at_pdt'].date()],
+                'ship_from': [row['ship_from']],
+                'shipping_date': [row['event_happened_at_pdt'].date()],
+                'ship_via': [row['carrier']],
+                'tracking_number': [row['tracking_number']],
+                'payment_terms': [warranty_assigned_to_shipment['payment_terms']],
+                'due_date': [warranty_assigned_to_shipment['due_date']],
+                'customer_name': [warranty_assigned_to_shipment['customer_name']],
+                'customer_email': [warranty_assigned_to_shipment['customer_email']],
+                'customer_phone_number': [warranty_assigned_to_shipment['customer_phone_number']],
+                'shipping_country': [warranty_assigned_to_shipment['shipping_country']],
+                'shipping_province': [warranty_assigned_to_shipment['shipping_province']],
+                'shipping_city': [warranty_assigned_to_shipment['shipping_city']],
+                'shipping_zip': [warranty_assigned_to_shipment['shipping_zip']],
+                'shipping_address': [warranty_assigned_to_shipment['shipping_address']],
+                'billing_country': [warranty_assigned_to_shipment['billing_country']],
+                'billing_province': [warranty_assigned_to_shipment['billing_province']],
+                'billing_city': [warranty_assigned_to_shipment['billing_city']],
+                'billing_zip': [warranty_assigned_to_shipment['billing_zip']],
+                'billing_address': [warranty_assigned_to_shipment['billing_address']],
+                'transaction_product_name': [warranty_assigned_to_shipment['line_item_name']],
+                'qty': [1],
+                'rate': [warranty_assigned_to_shipment['unit_price_in_usd']],
+                'amount': [warranty_assigned_to_shipment['unit_price_in_usd']],
+                'taxable': [warranty_assigned_to_shipment['taxable']],
+                'discount': [total_line_item_discount],
+                'discount_reallocation_target': [item_discount_type],
+                'shipping': [None],
+                'unique_identifier': [warranty_assigned_to_shipment['unique_identifier']],
+                'if_sent': [False]
+            })
+            df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
+        
+        # 如果没有找到能map到的warranty，就去找map不到source板子的warranty
+        else:
+            matching_warranties_added = df_warranty_added[
+                (df_warranty_added['order_id'] == row['order_id']) &
+                (df_warranty_added['warranty_source_product_name'] == None) & # 只选择map不到的warranty，即product_name为空，确保下面min value筛选出来的只有一行值
+                (df_warranty_added['event_happened_at_pdt'] <= row['event_happened_at_pdt']) &
+                (~df_warranty_added['unique_identifier'].isin(
+                    df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
+                ) &
+                (~df_warranty_added['unique_identifier'].isin(
+                    df_warranty_added_tag[df_warranty_added_tag['if_shipped'] == True]['unique_identifier'])
+                )
+            ]
+
+            # 如果找到了不能map到的warranty
+            if not matching_warranties_added.empty:
+                min_value = matching_warranties_added['physical_product_unit_idx'].min()
+                warranty_assigned_to_shipment = matching_warranties_added[matching_warranties_added['physical_product_unit_idx'] == min_value]
+
+                # 标记df_warranty_added_tag的if_shipped
+                df_warranty_added_tag = mark_tag(df_warranty_added_tag, warranty_assigned_to_shipment, 'if_shipped', 'shipment_unique_identifier', row)
+
+                # 找到这个warranty的discount值
+                total_line_item_discount, item_discount_type = get_line_item_discount(warranty_assigned_to_shipment)
+
+                # 生成invocie
+                new_row = pd.DataFrame({
+                    'order_name': [warranty_assigned_to_shipment['order_name']],
+                    'order_id': [warranty_assigned_to_shipment['order_id']],
+                    'order_created_at_pdt': [warranty_assigned_to_shipment['order_created_at_pdt']],
+                    'transaction_type': ["invoice"],
+                    'transaction_name': [f"{warranty_assigned_to_shipment['order_number']}-{row['package_id']}"],
+                    'line_type': [warranty_assigned_to_shipment['line_type']],
+                    'store': [warranty_assigned_to_shipment['store']],
+                    'transaction_date': [row['event_happened_at_pdt'].date()],
+                    'ship_from': [row['ship_from']],
+                    'shipping_date': [row['event_happened_at_pdt'].date()],
+                    'ship_via': [row['carrier']],
+                    'tracking_number': [row['tracking_number']],
+                    'payment_terms': [warranty_assigned_to_shipment['payment_terms']],
+                    'due_date': [warranty_assigned_to_shipment['due_date']],
+                    'customer_name': [warranty_assigned_to_shipment['customer_name']],
+                    'customer_email': [warranty_assigned_to_shipment['customer_email']],
+                    'customer_phone_number': [warranty_assigned_to_shipment['customer_phone_number']],
+                    'shipping_country': [warranty_assigned_to_shipment['shipping_country']],
+                    'shipping_province': [warranty_assigned_to_shipment['shipping_province']],
+                    'shipping_city': [warranty_assigned_to_shipment['shipping_city']],
+                    'shipping_zip': [warranty_assigned_to_shipment['shipping_zip']],
+                    'shipping_address': [warranty_assigned_to_shipment['shipping_address']],
+                    'billing_country': [warranty_assigned_to_shipment['billing_country']],
+                    'billing_province': [warranty_assigned_to_shipment['billing_province']],
+                    'billing_city': [warranty_assigned_to_shipment['billing_city']],
+                    'billing_zip': [warranty_assigned_to_shipment['billing_zip']],
+                    'billing_address': [warranty_assigned_to_shipment['billing_address']],
+                    'transaction_product_name': [warranty_assigned_to_shipment['line_item_name']],
+                    'qty': [1],
+                    'rate': [warranty_assigned_to_shipment['unit_price_in_usd']],
+                    'amount': [warranty_assigned_to_shipment['unit_price_in_usd']],
+                    'taxable': [warranty_assigned_to_shipment['taxable']],
+                    'discount': [total_line_item_discount],
+                    'discount_reallocation_target': [item_discount_type],
+                    'shipping': [None],
+                    'unique_identifier': [warranty_assigned_to_shipment['unique_identifier']],
+                    'if_sent': [False]
+                })
+                df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
+
+
 def generate_warranty_invoice_if_no_physical_product_order():
     global df_line_item_discount
     global df_warranty_added
@@ -794,6 +936,14 @@ def generate_warranty_invoice_if_no_physical_product_order():
                     'if_sent': [False]
                 })
                 df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
+
+def generate_warranty_invoice_if_added_after_all_shipment():
+    global df_invoice
+    global df_line_item_discount
+    global df_warranty_added
+    global df_warranty_added_tag
+
+    
     
 def process_events(event_list):
     global df_physical_product_added_tag
@@ -832,6 +982,7 @@ def process_events(event_list):
             matching_orders = df_physical_product_added[
                 (df_physical_product_added['order_name'] == row['order_name']) &
                 (df_physical_product_added['dim_physical_product_sk'] == row['dim_physical_product_sk']) &
+                (df_physical_product_added['event_happened_at_pdt'] <= row['event_happened_at_pdt']) &
                 (~df_physical_product_added['unique_identifier'].isin(
                     df_physical_product_added_tag[df_physical_product_added_tag['if_shipped'] == True]['unique_identifier'])
                 ) &
@@ -839,10 +990,12 @@ def process_events(event_list):
                     df_physical_product_added_tag[df_physical_product_added_tag['if_refunded'] == True]['unique_identifier'])
                 )
             ]
+            # 在处理历史数据的情况下，仍然需要筛选event_happened_at_pdt的时间前后。如果不筛选的话，SHO.13117是不会生成pre-shipped的invoice的，而是会直接生成line_type为PRODUCT的正常invoice
             
             # 如果找到了符合条件的order:
             if not matching_orders.empty:
-                order_shipment_assigned_to = matching_orders.loc[matching_orders['physical_product_unit_idx'].idxmin()]
+                min_value = matching_orders['physical_product_unit_idx'].min()
+                order_shipment_assigned_to = matching_orders[matching_orders['physical_product_unit_idx'] == min_value]
                 
                 # 标记df_physical_product_added_tag
                 df_physical_product_added_tag = mark_tag(df_physical_product_added_tag, order_shipment_assigned_to, 'if_shipped', 'shipment_unique_identifier', row)
@@ -964,7 +1117,8 @@ def process_events(event_list):
                  
                 # 如果找到了未被shipped的order去匹配refund，则不需要生成任何transaction
                 if not unshipped_matching_orders.empty:
-                    order_refund_assigned = unshipped_matching_orders.loc[unshipped_matching_orders['physical_product_unit_idx'].idxmin()]
+                    min_value = unshipped_matching_orders['physical_product_unit_idx'].min()
+                    order_refund_assigned = unshipped_matching_orders[unshipped_matching_orders['physical_product_unit_idx'] == min_value]
                     # 标记df_physical_product_added_tag的if_refunded
                     df_physical_product_added_tag = mark_tag(df_physical_product_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_physical_product_removed_tag的if_assigned
@@ -987,8 +1141,9 @@ def process_events(event_list):
                     ]
                     
                     # shipped_matching_orders不可能为空
-                    # 注意这里用了idxmax()，用以避免匹配到first board
-                    order_refund_assigned = shipped_matching_orders.loc[shipped_matching_orders['physical_product_unit_idx'].idxmax()]
+                    # 注意这里用了max()，用以避免匹配到first board
+                    max_value = shipped_matching_orders['physical_product_unit_idx'].max()
+                    order_refund_assigned = shipped_matching_orders[shipped_matching_orders['physical_product_unit_idx'] == max_value]
                     # 标记df_physical_product_added_tag的if_refunded
                     df_physical_product_added_tag = mark_tag(df_physical_product_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_physical_product_removed_tag的if_assigned
@@ -1014,7 +1169,8 @@ def process_events(event_list):
 
                 # 如果找到了未被shipped的order去匹配refund，则不需要生成任何transaction
                 if not unshipped_matching_orders.empty:
-                    order_refund_assigned = unshipped_matching_orders.loc[unshipped_matching_orders['physical_product_unit_idx'].idxmin()]
+                    min_value = unshipped_matching_orders['physical_product_unit_idx'].min()
+                    order_refund_assigned = unshipped_matching_orders[unshipped_matching_orders['physical_product_unit_idx'] == min_value]
                     # 标记df_custom_product_added_tag的if_refunded
                     df_custom_product_added_tag = mark_tag(df_custom_product_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
@@ -1036,7 +1192,8 @@ def process_events(event_list):
                     ]
 
                     # shipped_matching_orders不可能为空
-                    order_refund_assigned = shipped_matching_orders.loc[shipped_matching_orders['physical_product_unit_idx'].idxmin()]
+                    min_value = shipped_matching_orders['physical_product_unit_idx'].min()
+                    order_refund_assigned = shipped_matching_orders[shipped_matching_orders['physical_product_unit_idx'] == min_value]
                     # 标记df_custom_product_added_tag的if_refunded
                     df_custom_product_added_tag = mark_tag(df_custom_product_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
@@ -1098,7 +1255,8 @@ def process_events(event_list):
 
                 # 如果找到了未被shipped的order去匹配refund，则不需要生成任何transaction
                 if not unshipped_matching_orders.empty:
-                    order_refund_assigned = unshipped_matching_orders.loc[unshipped_matching_orders['physical_product_unit_idx'].idxmin()]
+                    min_value = unshipped_matching_orders['physical_product_unit_idx'].min()
+                    order_refund_assigned = unshipped_matching_orders[unshipped_matching_orders['physical_product_unit_idx'] == min_value]
                     # 标记df_custom_product_added_tag的if_refunded
                     df_warranty_added_tag = mark_tag(df_warranty_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
@@ -1120,7 +1278,8 @@ def process_events(event_list):
                     ]
 
                     # shipped_matching_orders不可能为空
-                    order_refund_assigned = shipped_matching_orders.loc[shipped_matching_orders['physical_product_unit_idx'].idxmin()]
+                    min_value = shipped_matching_orders['physical_product_unit_idx'].min()
+                    order_refund_assigned = shipped_matching_orders[shipped_matching_orders['physical_product_unit_idx'] == min_value]
                     # 标记df_custom_product_added_tag的if_refunded
                     df_warranty_added_tag = mark_tag(df_warranty_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
@@ -1188,6 +1347,13 @@ for index, row in df_unprocessed_orders_sorted.iterrows():
 # generate_shipping_journal_entry必须要在generate_custom_product_invoice和get_warranty_if_no_shipment_needed_order之后执行，否则全是custom product/warranty的订单的shipping会在下一次run的时候才会生成
 generate_custom_product_invoice()
 generate_warranty_invoice_if_no_physical_product_order()
+# generate_mapped_but_unmatched_warranty_invoice()
+    # 只能用于生成不会再编辑的订单的历史数据，之后的自动化不能这样去分配warranty，而是需要用alert去保证不会出现能map到但是和订单内的board产品完全不能匹配的情况
+    # 订单不会再编辑的意思是不会再有退款发生，到现在还没有退款的warranty都是确定要发invoice的
+# 但是在后续自动化传输的场景下，订单可能每天都在发生编辑行为。如果这个订单选错的warranty是在所有shipment发完之后才去订单里改成正确的，那这个正确的warranty的invoice什么时候生成呢？
+# 需要在最后把warranty added作为event单独处理一下
+# 如果所有board的发货都已经完成，那么在这个订单的最后一个board的shipment发生之后加入的所有warranty都用它被加入的时间传invoice
+generate_warranty_invoice_if_added_after_shipment()
 generate_shipping_journal_entry()
 df_physical_product_added_tag.to_excel('physical_product_added_tag.xlsx', index=False)
 df_physical_product_removed_tag.to_excel('physical_product_removed_tag.xlsx', index=False)
