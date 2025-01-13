@@ -757,7 +757,7 @@ def get_warranty_if_new_board_shipment(row):
     # 如果这个shipment的产品是board
     # ！！！！！！
     # 如果是ref board呢？
-    if 'board' in row['product_name'].lower() and not row['product_name'].lower().contains('- ref'):
+    if 'board' in row['product_name'].lower() and '- ref' not in row['product_name'].lower():
         matching_warranties_added = df_warranty_added[
             (df_warranty_added['order_id'] == row['order_id']) &
             (df_warranty_added['warranty_source_product_name'] == row['product_name']) &
