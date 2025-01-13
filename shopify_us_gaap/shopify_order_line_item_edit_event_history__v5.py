@@ -1359,9 +1359,9 @@ def process_events(event_list):
 
 for index, row in df_unprocessed_orders_sorted.iterrows():
     df_unprocessed_order_events = df_unprocessed_events[(df_unprocessed_events['order_name'] == row['order_name'])]
-    df_unprocessed_order_events_sorted = df_unprocessed_order_events.sort_values(by='event_happened_at_pdt', ascending=True)
     
-    if not df_unprocessed_order_events_sorted.empty:
+    if not df_unprocessed_order_events.empty:
+        df_unprocessed_order_events_sorted = df_unprocessed_order_events.sort_values(by='event_happened_at_pdt', ascending=True)
         process_events(df_unprocessed_order_events_sorted)
         df_physical_product_added_tag.to_excel('physical_product_added_tag.xlsx', index=False)
         df_physical_product_removed_tag.to_excel('physical_product_removed_tag.xlsx', index=False)
