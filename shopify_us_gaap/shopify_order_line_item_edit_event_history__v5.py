@@ -333,7 +333,7 @@ df_credit_memo = create_or_load_file(
 
 df_journal_entry = create_or_load_file(
     'journal_entry.xlsx', 
-    ['transaction_type', 'currency', 'transaction_name', 'transaction_date', 'account', 'debits', 'credits', 'description', 'name', 'store', 'unique_identifier', 'if_sent']
+    ['transaction_type', 'currency', 'transaction_name', 'transaction_date', 'account', 'account_id', 'debits', 'credits', 'description', 'name', 'store', 'unique_identifier', 'if_sent']
 )
 
 df_physical_product_removed_tag_temp = df_physical_product_removed_tag[['unique_identifier', 'if_processed']]
@@ -440,6 +440,7 @@ def generate_shipping_journal_entry():
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"],
                     'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account': ["11220100 Accounts Receivable (A/R)"],
+                    'account_id': ["51"],
                     'debits': [row['total_shipping']],
                     'credits': [None],
                     'description': [f"Shipping income for {row['order_name']}"],
