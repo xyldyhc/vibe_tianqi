@@ -240,9 +240,6 @@ df_warranty_removed = df_warranty_removed[df_warranty_removed['order_name'].isin
 # 创建tag文件来记录每一行的处理情况,并找到本次需要处理的记录有哪些（去除已处理的记录）
 # 如果这个文件已经存在就不再新建
 
-# if_processed用来标记这一条记录是否在for循环中被读取处理过，在for循环的哪一步标记为processed呢？
-# 以订单为单位标记为processed
-
 def create_or_load_file(file_path, file_columns):
     
     if os.path.exists(file_path):
