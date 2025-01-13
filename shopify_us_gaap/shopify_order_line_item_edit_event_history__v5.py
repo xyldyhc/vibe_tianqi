@@ -748,7 +748,7 @@ def generate_custom_product_invoice():
             })
             df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
             
-def get_warranty_if_board_shipment(row):
+def get_warranty_if_new_board_shipment(row):
     global df_warranty_added
     global df_warranty_added_tag
     global df_invoice
@@ -757,7 +757,7 @@ def get_warranty_if_board_shipment(row):
     # 如果这个shipment的产品是board
     # ！！！！！！
     # 如果是ref board呢？
-    if 'board' in row['product_name'].lower():
+    if 'board' in row['product_name'].lower() and not row['product_name'].lower().contains('- ref'):
         matching_warranties_added = df_warranty_added[
             (df_warranty_added['order_id'] == row['order_id']) &
             (df_warranty_added['warranty_source_product_name'] == row['product_name']) &
@@ -898,7 +898,7 @@ def generate_warranty_invoice_if_no_new_board_order():
     global df_invoice
     global df_line_item_discount
 
-    # 找到下单产品里没有需要发货的physical product的订单
+    # 找到下单产品里没有需要发货的new board的订单
     df_warranty_included_orders = df_warranty_added[
         (~df_warranty_added['unique_identifier'].isin(
             df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
@@ -915,7 +915,6 @@ def generate_warranty_invoice_if_no_new_board_order():
         (~df_physical_product_added['product_name'].str.contains('Warranty', case=False, na=False))
     ]['order_id'].unique()
 
-    # no board orders?
     no_new_board_orders = df_warranty_included_orders[~np.isin(df_warranty_included_orders, df_new_board_included_orders)]
     no_new_board_orders = pd.Series(no_new_board_orders)
 
@@ -1019,7 +1018,7 @@ def process_events(event_list):
             # 先处理shipping_line和custom product
             get_shipping_line_if_order_first_shipment(row)
             get_custom_product_if_order_first_shipment(row)
-            get_warranty_if_board_shipment(row)
+            get_warranty_if_new_board_shipment(row)
             
             # 找符合条件的order：
             matching_orders = df_physical_product_added[
