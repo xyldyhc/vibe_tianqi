@@ -1281,7 +1281,7 @@ def process_events(event_list):
 
                 # 如果没有找到未被shipped的order，只能匹配已shipped的order
                 else:
-                    shipped_matching_orders = df_warranty_added_tag[
+                    shipped_matching_orders = df_warranty_added[
                         (df_warranty_added['order_id'] == row['order_id']) &
                         (df_warranty_added['line_item_name'] == row['line_item_name']) &
                         (df_warranty_added['line_item_id'] == row['line_item_id']) &
