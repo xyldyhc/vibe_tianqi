@@ -1327,11 +1327,11 @@ def process_events(event_list):
                         'billing_address': [row['billing_address']],
                         'transaction_product_name': [row['line_item_name']],
                         'qty': [1],
-                        'rate': [custom_product_invoice_line['rate']],
-                        'amount': [custom_product_invoice_line['amount']],
-                        'taxable': [custom_product_invoice_line['taxable']],
-                        'discount': [custom_product_invoice_line['discount']],
-                        'discount_reallocation_target': [custom_product_invoice_line['discount_reallocation_target']],
+                        'rate': [warranty_invoice_line['rate']],
+                        'amount': [warranty_invoice_line['amount']],
+                        'taxable': [warranty_invoice_line['taxable']],
+                        'discount': [warranty_invoice_line['discount']],
+                        'discount_reallocation_target': [warranty_invoice_line['discount_reallocation_target']],
                         'unique_identifier': [row['unique_identifier']],
                         'if_sent': [False]
                     })
