@@ -774,6 +774,7 @@ def get_warranty_if_new_board_shipment(row):
         if not matching_warranties_added.empty:
             min_value = matching_warranties_added['physical_product_unit_idx'].min()
             warranty_assigned_to_shipment = matching_warranties_added[matching_warranties_added['physical_product_unit_idx'] == min_value]
+            warranty_assigned_to_shipment = pd.Series(warranty_assigned_to_shipment)
             # 筛选出来的结果中physical_product_unit_idx是unique的，取min筛选出来的只有一行值
 
             # 标记df_warranty_added_tag的if_shipped
@@ -841,6 +842,7 @@ def get_warranty_if_new_board_shipment(row):
             if not matching_warranties_added.empty:
                 min_value = matching_warranties_added['physical_product_unit_idx'].min()
                 warranty_assigned_to_shipment = matching_warranties_added[matching_warranties_added['physical_product_unit_idx'] == min_value]
+                warranty_assigned_to_shipment = pd.Series(warranty_assigned_to_shipment)
 
                 # 标记df_warranty_added_tag的if_shipped
                 df_warranty_added_tag = mark_tag(df_warranty_added_tag, warranty_assigned_to_shipment, 'if_shipped', 'shipment_unique_identifier', row)
@@ -1004,7 +1006,7 @@ def process_events(event_list):
             # 找符合条件的order：
             matching_orders = df_physical_product_added[
                 (df_physical_product_added['order_name'] == row['order_name']) &
-                (df_physical_product_added['dim_physical_product_sk'] == row['dim_physical_product_sk']) &
+                (df_physical_product_added['product_name'] == row['product_name']) &
                 (df_physical_product_added['event_happened_at_pdt'] <= row['event_happened_at_pdt']) &
                 (~df_physical_product_added['unique_identifier'].isin(
                     df_physical_product_added_tag[df_physical_product_added_tag['if_shipped'] == True]['unique_identifier'])
@@ -1019,6 +1021,7 @@ def process_events(event_list):
             if not matching_orders.empty:
                 min_value = matching_orders['physical_product_unit_idx'].min()
                 order_shipment_assigned_to = matching_orders[matching_orders['physical_product_unit_idx'] == min_value]
+                order_shipment_assigned_to = pd.Series(order_shipment_assigned_to)
                 
                 # 标记df_physical_product_added_tag
                 df_physical_product_added_tag = mark_tag(df_physical_product_added_tag, order_shipment_assigned_to, 'if_shipped', 'shipment_unique_identifier', row)
@@ -1140,6 +1143,8 @@ def process_events(event_list):
                 if not unshipped_matching_orders.empty:
                     min_value = unshipped_matching_orders['physical_product_unit_idx'].min()
                     order_refund_assigned = unshipped_matching_orders[unshipped_matching_orders['physical_product_unit_idx'] == min_value]
+                    order_refund_assigned = pd.Series(order_refund_assigned)
+
                     # 标记df_physical_product_added_tag的if_refunded
                     df_physical_product_added_tag = mark_tag(df_physical_product_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_physical_product_removed_tag的if_assigned
@@ -1192,6 +1197,8 @@ def process_events(event_list):
                 if not unshipped_matching_orders.empty:
                     min_value = unshipped_matching_orders['physical_product_unit_idx'].min()
                     order_refund_assigned = unshipped_matching_orders[unshipped_matching_orders['physical_product_unit_idx'] == min_value]
+                    order_refund_assigned = pd.Series(order_refund_assigned)
+
                     # 标记df_custom_product_added_tag的if_refunded
                     df_custom_product_added_tag = mark_tag(df_custom_product_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
@@ -1215,6 +1222,8 @@ def process_events(event_list):
                     # shipped_matching_orders不可能为空
                     min_value = shipped_matching_orders['physical_product_unit_idx'].min()
                     order_refund_assigned = shipped_matching_orders[shipped_matching_orders['physical_product_unit_idx'] == min_value]
+                    order_refund_assigned = pd.Series(order_refund_assigned)
+
                     # 标记df_custom_product_added_tag的if_refunded
                     df_custom_product_added_tag = mark_tag(df_custom_product_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
@@ -1277,6 +1286,8 @@ def process_events(event_list):
                 if not unshipped_matching_orders.empty:
                     min_value = unshipped_matching_orders['physical_product_unit_idx'].min()
                     order_refund_assigned = unshipped_matching_orders[unshipped_matching_orders['physical_product_unit_idx'] == min_value]
+                    order_refund_assigned = pd.Series(order_refund_assigned)
+
                     # 标记df_custom_product_added_tag的if_refunded
                     df_warranty_added_tag = mark_tag(df_warranty_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
@@ -1300,6 +1311,8 @@ def process_events(event_list):
                     # shipped_matching_orders不可能为空
                     min_value = shipped_matching_orders['physical_product_unit_idx'].min()
                     order_refund_assigned = shipped_matching_orders[shipped_matching_orders['physical_product_unit_idx'] == min_value]
+                    order_refund_assigned = pd.Series(order_refund_assigned)
+                    
                     # 标记df_custom_product_added_tag的if_refunded
                     df_warranty_added_tag = mark_tag(df_warranty_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
