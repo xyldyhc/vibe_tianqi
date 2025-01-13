@@ -1354,7 +1354,6 @@ for index, row in df_unprocessed_orders_sorted.iterrows():
         df_shipment_tag.to_excel('shipment_tag.xlsx', index=False)
         df_credit_memo['if_sent'] = True
         df_credit_memo.to_excel('credit_memo.xlsx', index=False)
-        df_invoice['if_sent'] = True
         df_invoice.to_excel('invoice.xlsx', index=False)
     
 # generate_shipping_journal_entry必须要在generate_custom_product_invoice和generate_warranty_invoice_if_no_more_new_board_shipment之后执行，否则全是custom product/warranty的订单的shipping会在下一次run的时候才会生成
