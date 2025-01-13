@@ -46,7 +46,7 @@ df_physical_product_added = df_line_item_added_drop[df_line_item_added_drop['pro
 df_physical_product_added = df_physical_product_added[~df_physical_product_added['product_name'].str.contains('Warranty|Extra|Remaining Balance', case=False, na=False)]
 
 # 选择product_name为空值并且line_item_name中包含Extend Protection Plan字符串的行 + product_name中包含Warranty的行
-# 他们都作为warranty处理，首先去匹配
+# 他们都作为warranty处理
 df_warranty_added = df_line_item_added_drop[
     df_line_item_added_drop['product_name'].str.contains('Warranty', case=False, na=False) |
     (df_line_item_added_drop['product_name'].isna() &
