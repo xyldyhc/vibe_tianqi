@@ -1359,8 +1359,7 @@ for index, row in df_unprocessed_orders_sorted.iterrows():
     
 # generate_shipping_journal_entry必须要在generate_custom_product_invoice和generate_warranty_invoice_if_no_more_new_board_shipment之后执行，否则全是custom product/warranty的订单的shipping会在下一次run的时候才会生成
 generate_custom_product_invoice()
-# generate_warranty_invoice_if_no_new_board_added_order()删除了，因为它已经包含在generate_warranty_invoice_if_no_more_new_board_shipment()里了
-# generate_warranty_invoice_if_no_new_board_added_order()
+# generate_warranty_invoice_if_no_new_board_added_order() -- 删除了，因为它已经包含在generate_warranty_invoice_if_no_more_new_board_shipment()里了
 # generate_mapped_but_unmatched_warranty_invoice()
     # 只能用于生成不会再编辑的订单的历史数据，之后的自动化不能这样去分配warranty，而是需要用alert去保证不会出现能map到但是和订单内的board产品完全不能匹配的情况
     # 订单不会再编辑的意思是不会再有退款发生，如果到现在还没有退款的warranty都是确定要发invoice的，那需要加一下这个function
