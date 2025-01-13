@@ -889,7 +889,7 @@ def get_warranty_if_new_board_shipment(row):
                 })
                 df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
 
-
+# 检查过历史数据，不存在一个订单内同时存在ref board和warranty的情况
 def generate_warranty_invoice_if_no_new_board_order():
     global df_physical_product_added
     global df_physical_product_added_tag
