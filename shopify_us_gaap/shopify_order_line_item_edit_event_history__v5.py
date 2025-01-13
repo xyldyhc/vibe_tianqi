@@ -160,33 +160,33 @@ df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_p
 test_orders = [
     'SHO.1109',
     'SHO.7307',
-    'SHO.13117',
-    'SHO.14244',
-    'SHO.16785',
-    'SHO.18067',
-    'SHO.18078',
-    'SHO.17441',
-    'SHO.16442',
-    'SHO.16311',
-    'SHO.20397',
-    'SHO.16364',
-    'SHO.19546',
-    'SHO.19964',
-    'SHO.21135',
-    'SHO.20349',
-    'SHO.20449',
-    'SHO.18876',
-    'SHO.19466',
-    'SHO.19830',
-    'SHO.21214',
-    'SHO.19830',
-    'SHO.15134',
-    'SHO.8951',
-    'SHO.14094',
-    'SHO.16860',
-    'SHO.17405',
-    'SHO.19411',
-    'SHO.18158'
+    'SHO.13117'
+    # 'SHO.14244',
+    # 'SHO.16785',
+    # 'SHO.18067',
+    # 'SHO.18078',
+    # 'SHO.17441',
+    # 'SHO.16442',
+    # 'SHO.16311',
+    # 'SHO.20397',
+    # 'SHO.16364',
+    # 'SHO.19546',
+    # 'SHO.19964',
+    # 'SHO.21135',
+    # 'SHO.20349',
+    # 'SHO.20449',
+    # 'SHO.18876',
+    # 'SHO.19466',
+    # 'SHO.19830',
+    # 'SHO.21214',
+    # 'SHO.19830',
+    # 'SHO.15134',
+    # 'SHO.8951',
+    # 'SHO.14094',
+    # 'SHO.16860',
+    # 'SHO.17405',
+    # 'SHO.19411',
+    # 'SHO.18158'
 ]
 # SHO.1109：订单下了v1 board和custom product。有一条shipping。没有任何发货记录。应该全部没有相关记录。
 # SHO.7307：订单下了5个产品，有1个产品未发货。有3个产品（包含1个未发货的产品）叠加了两种discount。
@@ -1312,7 +1312,7 @@ def process_events(event_list):
                     min_value = shipped_matching_orders['physical_product_unit_idx'].min()
                     order_refund_assigned = shipped_matching_orders[shipped_matching_orders['physical_product_unit_idx'] == min_value]
                     order_refund_assigned = pd.Series(order_refund_assigned)
-                    
+
                     # 标记df_custom_product_added_tag的if_refunded
                     df_warranty_added_tag = mark_tag(df_warranty_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
@@ -1361,20 +1361,20 @@ for index, row in df_unprocessed_orders_sorted.iterrows():
     df_unprocessed_order_events = df_unprocessed_events[(df_unprocessed_events['order_name'] == row['order_name'])]
     df_unprocessed_order_events_sorted = df_unprocessed_order_events.sort_values(by='event_happened_at_pdt', ascending=True)
     
-    process_events(df_unprocessed_order_events_sorted)
-    
-    df_physical_product_added_tag.to_excel('physical_product_added_tag.xlsx', index=False)
-    df_physical_product_removed_tag.to_excel('physical_product_removed_tag.xlsx', index=False)
-    df_custom_product_added_tag.to_excel('custom_product_added_tag.xlsx', index=False)
-    df_custom_product_removed_tag.to_excel('custom_product_removed_tag.xlsx', index=False)
-    df_warranty_added_tag.to_excel('warranty_added_tag.xlsx', index=False)
-    df_warranty_removed_tag.to_excel('warranty_removed_tag.xlsx', index=False)
-    df_shipping_line_tag.to_excel('shipping_line_tag.xlsx', index=False)
-    df_shipment_tag.to_excel('shipment_tag.xlsx', index=False)
-    df_credit_memo['if_sent'] = True
-    df_credit_memo.to_excel('credit_memo.xlsx', index=False)
-    df_invoice['if_sent'] = True
-    df_invoice.to_excel('invoice.xlsx', index=False)
+    if not df_unprocessed_order_events_sorted.empty:
+        process_events(df_unprocessed_order_events_sorted)
+        df_physical_product_added_tag.to_excel('physical_product_added_tag.xlsx', index=False)
+        df_physical_product_removed_tag.to_excel('physical_product_removed_tag.xlsx', index=False)
+        df_custom_product_added_tag.to_excel('custom_product_added_tag.xlsx', index=False)
+        df_custom_product_removed_tag.to_excel('custom_product_removed_tag.xlsx', index=False)
+        df_warranty_added_tag.to_excel('warranty_added_tag.xlsx', index=False)
+        df_warranty_removed_tag.to_excel('warranty_removed_tag.xlsx', index=False)
+        df_shipping_line_tag.to_excel('shipping_line_tag.xlsx', index=False)
+        df_shipment_tag.to_excel('shipment_tag.xlsx', index=False)
+        df_credit_memo['if_sent'] = True
+        df_credit_memo.to_excel('credit_memo.xlsx', index=False)
+        df_invoice['if_sent'] = True
+        df_invoice.to_excel('invoice.xlsx', index=False)
     
 # generate_shipping_journal_entry必须要在generate_custom_product_invoice和generate_warranty_invoice_if_no_more_new_board_shipment之后执行，否则全是custom product/warranty的订单的shipping会在下一次run的时候才会生成
 generate_custom_product_invoice()
