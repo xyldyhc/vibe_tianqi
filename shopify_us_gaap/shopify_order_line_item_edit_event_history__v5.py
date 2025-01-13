@@ -333,7 +333,10 @@ df_credit_memo = create_or_load_file(
 
 df_journal_entry = create_or_load_file(
     'journal_entry.xlsx', 
-    ['transaction_type', 'currency', 'transaction_name', 'transaction_date', 'account', 'account_id', 'debits', 'credits', 'description', 'name', 'store', 'unique_identifier', 'if_sent']
+    ['transaction_type', 'currency', 'transaction_name', 'transaction_date', 'account', 'account_id', 'debits', 'credits', 'description',
+     'customer_name', 'customer_email', 'customer_phone_number', 'billing_country','billing_province', 'billing_city', 'billing_zip', 'billing_address',
+     'store', 'unique_identifier', 'if_sent'
+    ]
 )
 
 df_physical_product_removed_tag_temp = df_physical_product_removed_tag[['unique_identifier', 'if_processed']]
@@ -428,8 +431,14 @@ def generate_shipping_journal_entry():
     
     if not matching_shipping_lines.empty:
     # 计算journal entry的金额
-        results = matching_shipping_lines.groupby(['order_name', 'order_number', 'customer_name', 'store', 'event_happened_date_pdt'])['total_price_in_usd'].sum().reset_index()
-        results.columns = ['order_name', 'order_number', 'customer_name', 'store', 'event_happened_date_pdt', 'total_shipping']
+        results = matching_shipping_lines.groupby([
+            'order_name', 'order_number', 'customer_name', 'customer_email', 'customer_phone_number',
+            'billing_country', 'billing_province', 'billing_city', 'billing_zip', 'billing_address', 'store', 'event_happened_date_pdt'
+        ])['total_price_in_usd'].sum().reset_index()
+        results.columns = [
+            'order_name', 'order_number', 'customer_name', 'customer_email', 'customer_phone_number',
+            'billing_country', 'billing_province', 'billing_city', 'billing_zip', 'billing_address', 'store', 'event_happened_date_pdt', 'total_shipping'
+        ]
     
         for index, row in results.iterrows():
             # 如果shipping是正值，即income
@@ -444,7 +453,14 @@ def generate_shipping_journal_entry():
                     'debits': [row['total_shipping']],
                     'credits': [None],
                     'description': [f"Shipping income for {row['order_name']}"],
-                    'name': [row['customer_name']],
+                    'customer_name': [row['customer_name']],
+                    'customer_email': [row['customer_email']],
+                    'customer_phone_number': [row['customer_phone_number']],
+                    'billing_country': [row['billing_country']],
+                    'billing_province': [row['billing_province']],
+                    'billing_city': [row['billing_city']],
+                    'billing_zip': [row['billing_zip']],
+                    'billing_address': [row['billing_address']],
                     'store': [row['store']],
                     'unique_identifier': [None],
                     'if_sent': [False]
@@ -457,10 +473,18 @@ def generate_shipping_journal_entry():
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"],
                     'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
+                    'account_id': ["49"],
                     'debits': [None],
                     'credits': [row['total_shipping']],
                     'description': [f"Shipping income for {row['order_name']}"],
-                    'name': [row['customer_name']],
+                    'customer_name': [row['customer_name']],
+                    'customer_email': [row['customer_email']],
+                    'customer_phone_number': [row['customer_phone_number']],
+                    'billing_country': [row['billing_country']],
+                    'billing_province': [row['billing_province']],
+                    'billing_city': [row['billing_city']],
+                    'billing_zip': [row['billing_zip']],
+                    'billing_address': [row['billing_address']],
                     'store': [row['store']],
                     'unique_identifier': [None],
                     'if_sent': [False]
@@ -475,10 +499,18 @@ def generate_shipping_journal_entry():
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"], # SP是shipping的缩写
                     'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account': ["11220100 Accounts Receivable (A/R)"],
+                    'account_id': ["51"],
                     'debits': [None],
                     'credits': [row['total_shipping']],
                     'description': [f"Shipping refund for {row['order_name']}"],
-                    'name': [row['customer_name']],
+                    'customer_name': [row['customer_name']],
+                    'customer_email': [row['customer_email']],
+                    'customer_phone_number': [row['customer_phone_number']],
+                    'billing_country': [row['billing_country']],
+                    'billing_province': [row['billing_province']],
+                    'billing_city': [row['billing_city']],
+                    'billing_zip': [row['billing_zip']],
+                    'billing_address': [row['billing_address']],
                     'store': [row['store']],
                     'unique_identifier': [None],
                     'if_sent': [False]
@@ -491,10 +523,18 @@ def generate_shipping_journal_entry():
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"], # SP是shipping的缩写
                     'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
+                    'account_id': ["49"],
                     'debits': [row['total_shipping']],
                     'credits': [None],
                     'description': [f"Shipping refund for {row['order_name']}"],
-                    'name': [row['customer_name']],
+                    'customer_name': [row['customer_name']],
+                    'customer_email': [row['customer_email']],
+                    'customer_phone_number': [row['customer_phone_number']],
+                    'billing_country': [row['billing_country']],
+                    'billing_province': [row['billing_province']],
+                    'billing_city': [row['billing_city']],
+                    'billing_zip': [row['billing_zip']],
+                    'billing_address': [row['billing_address']],
                     'store': [row['store']],
                     'unique_identifier': [None],
                     'if_sent': [False]
