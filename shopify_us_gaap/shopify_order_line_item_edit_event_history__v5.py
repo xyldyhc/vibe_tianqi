@@ -1159,9 +1159,8 @@ def process_events(event_list):
                     ]
                     
                     # shipped_matching_orders不可能为空
-                    # 注意这里用了max()，用以避免匹配到first board
-                    max_value = shipped_matching_orders['physical_product_unit_idx'].max()
-                    order_refund_assigned = shipped_matching_orders[shipped_matching_orders['physical_product_unit_idx'] == max_value]
+                    # 注意这里用了max()，用以避免匹配到first board。后续迭代可能会用到？
+                    order_refund_assigned = shipped_matching_orders.loc[shipped_matching_orders['physical_product_unit_idx'].idxmax()]
                     # 标记df_physical_product_added_tag的if_refunded
                     df_physical_product_added_tag = mark_tag(df_physical_product_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_physical_product_removed_tag的if_assigned
