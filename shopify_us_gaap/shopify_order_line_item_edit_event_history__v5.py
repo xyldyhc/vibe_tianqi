@@ -774,6 +774,7 @@ def get_warranty_if_new_board_shipment(row):
         if not matching_warranties_added.empty:
             warranty_assigned_to_shipment = matching_warranties_added.loc[matching_warranties_added['physical_product_unit_idx'].idxmin()]
             # 筛选出来的结果中physical_product_unit_idx是unique的，取min筛选出来的只有一行值
+            # ！！！！写test，unique_combination_of_columns
 
             # 标记df_warranty_added_tag的if_shipped
             df_warranty_added_tag = mark_tag(df_warranty_added_tag, warranty_assigned_to_shipment, 'if_shipped', 'shipment_unique_identifier', row)
