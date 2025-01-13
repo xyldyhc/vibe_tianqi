@@ -384,7 +384,7 @@ def mark_tag(df_tag, row, tag_column, related_unique_identifier_column=None, rel
 def get_shipping_line_if_order_first_shipment(row):
     global df_invoice, df_shipping_line, df_shipping_line_tag
     if row['order_name'] not in df_invoice['order_name'].values:
-    # 不需要筛选df_invoice['line_type'] == 'PRODUCT'
+    # 不需要筛选df_invoice['line_type'] == 'PRODUCT'，因为如果invoice里有先行发送过custom product或者warranty的话，shipping line已经在journal entry里发送过了，不需要再和first shipment一起发送
         matching_shipping_lines = df_shipping_line[
             (df_shipping_line['order_name'] == row['order_name']) &
             (df_shipping_line['event_happened_at_pdt'] <= row['event_happened_at_pdt']) &
