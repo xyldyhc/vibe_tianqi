@@ -890,38 +890,25 @@ def get_warranty_if_new_board_shipment(row):
                 df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
 
 # 检查过历史数据，不存在一个订单内同时存在ref board和warranty的情况
-def generate_warranty_invoice_if_no_new_board_order():
-    global df_physical_product_added
-    global df_physical_product_added_tag
-    global df_warranty_added
-    global df_warranty_added_tag
+def generate_warranty_invoice_if_no_more_new_board_shipment():
     global df_invoice
     global df_line_item_discount
+    global df_warranty_added
+    global df_warranty_added_tag
+    global df_physical_product_added
+    global df_physical_product_added_tag
 
-    # 找到下单产品里没有需要发货的new board的订单
-    df_warranty_included_orders = df_warranty_added[
-        (~df_warranty_added['unique_identifier'].isin(
-            df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
-        )
+    # 找到order_new_board_fulfillment_status为Zero New Board Ordered或者Fulfilled的订单
+    all_new_board_shipment_fulfilled_orders = df_physical_product_added[
+        (df_physical_product_added['order_new_board_fulfillment_status'] == 'Zero New Board Ordered') |
+        (df_physical_product_added['order_new_board_fulfillment_status'] == 'Fulfilled')
     ]['order_id'].unique()
-
-    df_new_board_included_orders = df_physical_product_added[
-        (~df_physical_product_added['unique_identifier'].isin(
-            df_physical_product_added_tag[df_physical_product_added_tag['if_refunded'] == True]['unique_identifier'])
-        ) &
-        (df_physical_product_added['product_name'].str.contains('Board', case=False, na=False)) &
-        (~df_physical_product_added['product_name'].str.contains('- ref', case=False, na=False)) &
-        (~df_physical_product_added['product_name'].str.contains('Remaining Balance', case=False, na=False)) &
-        (~df_physical_product_added['product_name'].str.contains('Warranty', case=False, na=False))
-    ]['order_id'].unique()
-
-    no_new_board_orders = df_warranty_included_orders[~np.isin(df_warranty_included_orders, df_new_board_included_orders)]
-    no_new_board_orders = pd.Series(no_new_board_orders)
-
+    all_new_board_shipment_fulfilled_orders = pd.Series(all_new_board_shipment_fulfilled_orders)
+    
     # 如果找到符合条件的订单
-    if not no_new_board_orders.empty:
+    if not all_new_board_shipment_fulfilled_orders.empty:
         matching_warranties_added = df_warranty_added[
-            (df_warranty_added['order_id'].isin(no_new_board_orders)) &
+            (df_warranty_added['order_id'].isin(all_new_board_shipment_fulfilled_orders)) &
             (~df_warranty_added['unique_identifier'].isin(
                 df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
             ) &
@@ -978,12 +965,6 @@ def generate_warranty_invoice_if_no_new_board_order():
                     'if_sent': [False]
                 })
                 df_invoice = pd.concat([df_invoice, new_row], ignore_index=True)
-
-def generate_warranty_invoice_if_added_after_all_new_board_shipment():
-    global df_invoice
-    global df_line_item_discount
-    global df_warranty_added
-    global df_warranty_added_tag
 
     
     
@@ -1382,16 +1363,17 @@ for index, row in df_unprocessed_orders_sorted.iterrows():
     df_invoice['if_sent'] = True
     df_invoice.to_excel('invoice.xlsx', index=False)
     
-# generate_shipping_journal_entry必须要在generate_custom_product_invoice和get_warranty_if_no_shipment_needed_order之后执行，否则全是custom product/warranty的订单的shipping会在下一次run的时候才会生成
+# generate_shipping_journal_entry必须要在generate_custom_product_invoice和generate_warranty_invoice_if_no_more_new_board_shipment之后执行，否则全是custom product/warranty的订单的shipping会在下一次run的时候才会生成
 generate_custom_product_invoice()
-generate_warranty_invoice_if_no_new_board_order()
+# generate_warranty_invoice_if_no_new_board_added_order()删除了，因为它已经包含在generate_warranty_invoice_if_no_more_new_board_shipment()里了
+# generate_warranty_invoice_if_no_new_board_added_order()
 # generate_mapped_but_unmatched_warranty_invoice()
     # 只能用于生成不会再编辑的订单的历史数据，之后的自动化不能这样去分配warranty，而是需要用alert去保证不会出现能map到但是和订单内的board产品完全不能匹配的情况
     # 订单不会再编辑的意思是不会再有退款发生，如果到现在还没有退款的warranty都是确定要发invoice的，那需要加一下这个function
 # 但是在后续自动化传输的场景下，订单可能每天都在发生编辑行为。如果这个订单选错的warranty是在所有shipment发完之后才去订单里改成正确的，那这个正确的warranty的invoice什么时候生成呢？
 # 需要在最后把warranty added作为event单独处理一下
 # 如果所有newn board的发货都已经完成，那么在这个订单的最后一个board的shipment发生之后加入的所有warranty都用它被加入的时间传invoice
-generate_warranty_invoice_if_added_after_all_new_board_shipment()
+generate_warranty_invoice_if_no_more_new_board_shipment()
 generate_shipping_journal_entry()
 df_physical_product_added_tag.to_excel('physical_product_added_tag.xlsx', index=False)
 df_physical_product_removed_tag.to_excel('physical_product_removed_tag.xlsx', index=False)
