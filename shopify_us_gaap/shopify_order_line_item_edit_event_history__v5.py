@@ -1108,7 +1108,7 @@ def process_events(event_list):
                     'rate': [rate_value],
                     'amount': [rate_value],
                     'taxable': [False],
-                    'discount': [None],
+                    'discount': [0],
                     'discount_reallocation_target': [None],
                     'shipping': [None],
                     'unique_identifier': [row['unique_identifier']],
