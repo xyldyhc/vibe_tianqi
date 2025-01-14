@@ -173,7 +173,7 @@ test_orders = [
     'SHO.21214',
     'SHO.19830',
     'SHO.15134',
-    'SHO.16311',#？没有发货后添加的shipping line的journal entry
+    'SHO.16311',
     'SHO.8951',
     'SHO.14094',
     'SHO.16860',
