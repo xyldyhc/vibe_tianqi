@@ -330,7 +330,7 @@ df_credit_memo = create_or_load_file(
 
 df_journal_entry = create_or_load_file(
     'journal_entry.xlsx', 
-    ['transaction_type', 'currency', 'transaction_name', 'transaction_date', 'account', 'account_id', 'debits', 'credits', 'description',
+    ['transaction_type', 'currency', 'transaction_name', 'transaction_date', 'account_name', 'account_number', 'account_id', 'debits', 'credits', 'description',
      'customer_name', 'customer_email', 'customer_phone_number', 'billing_country','billing_province', 'billing_city', 'billing_zip', 'billing_address',
      'store', 'unique_identifier', 'if_sent'
     ]
@@ -445,7 +445,8 @@ def generate_shipping_journal_entry():
                     'currency': ["USD United States Dollar"],
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"],
                     'transaction_date': [row['event_happened_date_pdt'].date()],
-                    'account': ["11220100 Accounts Receivable (A/R)"],
+                    'account_name': ["Accounts Receivable (A/R)"],
+                    'account_number': ["11220100"],
                     'account_id': ["51"],
                     'debits': [row['total_shipping']],
                     'credits': [None],
@@ -469,7 +470,8 @@ def generate_shipping_journal_entry():
                     'currency': ["USD United States Dollar"],
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"],
                     'transaction_date': [row['event_happened_date_pdt'].date()],
-                    'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
+                    'account_name': ["Amazon and Shopify sales:Shopify shipping income"],
+                    'account_number': ["40010305"],
                     'account_id': ["49"],
                     'debits': [None],
                     'credits': [row['total_shipping']],
@@ -495,7 +497,8 @@ def generate_shipping_journal_entry():
                     'currency': ["USD United States Dollar"],
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"], # SP是shipping的缩写
                     'transaction_date': [row['event_happened_date_pdt'].date()],
-                    'account': ["11220100 Accounts Receivable (A/R)"],
+                    'account_name': ["Accounts Receivable (A/R)"],
+                    'account_number': ["11220100"],
                     'account_id': ["51"],
                     'debits': [None],
                     'credits': [row['total_shipping']],
@@ -519,7 +522,8 @@ def generate_shipping_journal_entry():
                     'currency': ["USD United States Dollar"],
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"], # SP是shipping的缩写
                     'transaction_date': [row['event_happened_date_pdt'].date()],
-                    'account': ["40010305 Amazon and Shopify sales:Shopify shipping income"],
+                    'account_name': ["Amazon and Shopify sales:Shopify shipping income"],
+                    'account_number': ["40010305"],
                     'account_id': ["49"],
                     'debits': [row['total_shipping']],
                     'credits': [None],
