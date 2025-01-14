@@ -161,32 +161,25 @@ test_orders = [
     'SHO.1109',
     'SHO.7307',
     'SHO.13117',
-    # 'SHO.14244',
-    # 'SHO.16785',
-    # 'SHO.18067',
+    'SHO.14244',#?
+    'SHO.16785',
+    'SHO.18067',
     'SHO.18078',
-    # 'SHO.17441',
-    # 'SHO.16442',
-    # 'SHO.16311',
-    # 'SHO.20397',
-    # 'SHO.16364',
-    # 'SHO.19546',
-    # 'SHO.19964',
-    # 'SHO.21135',
-    # 'SHO.20349',
-    # 'SHO.20449',
-    # 'SHO.18876',
-    # 'SHO.19466',
-    # 'SHO.19830',
-    # 'SHO.21214',
-    # 'SHO.19830',
-    # 'SHO.15134',
-    # 'SHO.8951',
-    # 'SHO.14094',
-    # 'SHO.16860',
-    # 'SHO.17405',
-    # 'SHO.19411',
-    # 'SHO.18158'
+    'SHO.17441',
+    'SHO.16442',
+    'SHO.16311',#? 怎么没有shipping的journal entry
+    'SHO.20397',
+    'SHO.20349',#?
+    'SHO.18876',
+    'SHO.21214',
+    'SHO.19830',
+    'SHO.15134',
+    'SHO.8951',#？warranty没有发送invoice？
+    'SHO.14094',
+    'SHO.16860',#？warranty没有发送invoice？
+    'SHO.17405',#？warranty没有发送invoice？
+    'SHO.19411',
+    'SHO.18158' #?
 ]
 # SHO.1109：订单下了v1 board和custom product。有一条shipping。没有任何发货记录。应该全部没有相关记录。
 # SHO.7307：订单下了5个产品，有1个产品未发货。有3个产品（包含1个未发货的产品）叠加了两种discount。
@@ -196,13 +189,13 @@ test_orders = [
 # SHO.18078：下单了1个板子和1个支架，还有1个能map到板子的warranty。下单后全部完成了发货（此时应该有3条invoice）。然后把下单的3样东西全退款了（此时应该生成warranty的credit memo），又重新加了回来（此时生成新加进来的warranty的invoice）。
 # SHO.17441：0元的influencer订单
 # SHO.16785：全部是custom product的订单
-# SHO.17441 - SHO.19830：有两条及以上的shipping line的订单
+# SHO.17441 - SHO.18876：有两条及以上的shipping line的订单
 # SHO.21214：全部是custom product并且还有custom product的return。有一行shipping line。
-# SHO.19830：全部是custom product并且还有custom product的return
+# SHO.19830：全部是custom product并且还有custom product的return。有一行shipping line，是在发货完成后加上的
 # SHO.15134：同时下单了physical product和custom product。伴有custom product的return
-# SHO.8951：下单了warranty和custom product
-# SHO.14094：下单了warranty，并且给这个item退款了
-# SHO.16860：下单了warranty
+# SHO.8951：只下单了warranty和custom product
+# SHO.14094：只下单了warranty，并且给这个item退款了
+# SHO.16860：只下单了warranty
 # SHO.17405：下单了warranty
 # SHO.19411：有能map到的warranty
 # SHO.18158：有不能map到的warranty
@@ -922,7 +915,7 @@ def generate_warranty_invoice_if_no_more_new_board_shipment():
                 # 标记df_warranty_added_tag的if_shipped
                 df_warranty_added_tag = mark_tag(df_warranty_added_tag, warranty_added_row, 'if_shipped')
 
-                # 找到这个custom_product的discount值
+                # 找到这个warranty的discount值
                 total_line_item_discount, item_discount_type = get_line_item_discount(warranty_added_row)
 
                 # 生成invocie
