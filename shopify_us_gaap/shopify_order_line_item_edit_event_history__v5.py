@@ -167,9 +167,9 @@ test_orders = [
     'SHO.18078',
     'SHO.17441',
     'SHO.16442',
-    'SHO.16311',#? 怎么没有shipping的journal entry
+    'SHO.16311',#？怎么没有shipping的journal entry
     'SHO.20397',
-    'SHO.20349',#?
+    'SHO.20349',
     'SHO.18876',
     'SHO.21214',
     'SHO.19830',
@@ -179,7 +179,7 @@ test_orders = [
     'SHO.16860',#？warranty没有发送invoice？
     'SHO.17405',#？warranty没有发送invoice？
     'SHO.19411',
-    'SHO.18158' #?
+    'SHO.18158'
 ]
 # SHO.1109：订单下了v1 board和custom product。有一条shipping。没有任何发货记录。应该全部没有相关记录。
 # SHO.7307：订单下了5个产品，有1个产品未发货。有3个产品（包含1个未发货的产品）叠加了两种discount。
