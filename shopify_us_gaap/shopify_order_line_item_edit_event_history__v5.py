@@ -161,32 +161,32 @@ test_orders = [
     'SHO.1109',
     'SHO.7307',
     'SHO.13117',
-    'SHO.14244',
-    'SHO.16785',
-    'SHO.18067',
+    # 'SHO.14244',
+    # 'SHO.16785',
+    # 'SHO.18067',
     'SHO.18078',
-    'SHO.17441',
-    'SHO.16442',
-    'SHO.16311',
-    'SHO.20397',
-    'SHO.16364',
-    'SHO.19546',
-    'SHO.19964',
-    'SHO.21135',
-    'SHO.20349',
-    'SHO.20449',
-    'SHO.18876',
-    'SHO.19466',
-    'SHO.19830',
-    'SHO.21214',
-    'SHO.19830',
-    'SHO.15134',
-    'SHO.8951',
-    'SHO.14094',
-    'SHO.16860',
-    'SHO.17405',
-    'SHO.19411',
-    'SHO.18158'
+    # 'SHO.17441',
+    # 'SHO.16442',
+    # 'SHO.16311',
+    # 'SHO.20397',
+    # 'SHO.16364',
+    # 'SHO.19546',
+    # 'SHO.19964',
+    # 'SHO.21135',
+    # 'SHO.20349',
+    # 'SHO.20449',
+    # 'SHO.18876',
+    # 'SHO.19466',
+    # 'SHO.19830',
+    # 'SHO.21214',
+    # 'SHO.19830',
+    # 'SHO.15134',
+    # 'SHO.8951',
+    # 'SHO.14094',
+    # 'SHO.16860',
+    # 'SHO.17405',
+    # 'SHO.19411',
+    # 'SHO.18158'
 ]
 # SHO.1109：订单下了v1 board和custom product。有一条shipping。没有任何发货记录。应该全部没有相关记录。
 # SHO.7307：订单下了5个产品，有1个产品未发货。有3个产品（包含1个未发货的产品）叠加了两种discount。
@@ -828,7 +828,7 @@ def get_warranty_if_new_board_shipment(row):
         else:
             matching_warranties_added = df_warranty_added[
                 (df_warranty_added['order_id'] == row['order_id']) &
-                (df_warranty_added['warranty_source_product_name'] == None) & # 只选择map不到的warranty，即product_name为空，确保下面min value筛选出来的只有一行值
+                (pd.isna(df_warranty_added['warranty_source_product_name'])) & # 只选择map不到的warranty，即product_name为空，确保下面min value筛选出来的只有一行值
                 (df_warranty_added['event_happened_at_pdt'] <= row['event_happened_at_pdt']) &
                 (~df_warranty_added['unique_identifier'].isin(
                     df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
@@ -996,7 +996,7 @@ def process_events(event_list):
             #标记df_shipment_tag里的if_processed
             df_shipment_tag = mark_tag(df_shipment_tag, row, 'if_processed')
             
-            # 先处理shipping_line和custom product
+            # 先处理shipping_line/custom product/warranty
             get_shipping_line_if_order_first_shipment(row)
             get_custom_product_if_order_first_shipment(row)
             get_warranty_if_new_board_shipment(row)
