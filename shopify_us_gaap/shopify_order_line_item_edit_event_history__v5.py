@@ -167,17 +167,17 @@ test_orders = [
     'SHO.18078',
     'SHO.17441',
     'SHO.16442',
-    'SHO.16311',#？怎么没有shipping的journal entry
     'SHO.20397',
     'SHO.20349',
     'SHO.18876',
     'SHO.21214',
     'SHO.19830',
     'SHO.15134',
-    'SHO.8951',#？warranty没有发送invoice？
+    'SHO.16311',#？没有发货后添加的shipping line的journal entry
+    'SHO.8951',#？warranty没有发送invoice
     'SHO.14094',
-    'SHO.16860',#？warranty没有发送invoice？
-    'SHO.17405',#？warranty没有发送invoice？
+    'SHO.16860',#？warranty没有发送invoice
+    'SHO.17405',#？warranty没有发送invoice
     'SHO.19411',
     'SHO.18158'
 ]
@@ -193,6 +193,7 @@ test_orders = [
 # SHO.21214：全部是custom product并且还有custom product的return。有一行shipping line。
 # SHO.19830：全部是custom product并且还有custom product的return。有一行shipping line，是在发货完成后加上的
 # SHO.15134：同时下单了physical product和custom product。伴有custom product的return
+# SHO.16311：有一行shipping line，是在发货完成后加上的
 # SHO.8951：只下单了warranty和custom product
 # SHO.14094：只下单了warranty，并且给这个item退款了
 # SHO.16860：只下单了warranty
