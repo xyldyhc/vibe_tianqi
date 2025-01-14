@@ -1217,7 +1217,7 @@ def process_events(event_list):
                     # 找到之前这个order在df_invoice里面对应的记录
                     custom_product_invoice_line = df_invoice[
                         (df_invoice['unique_identifier'] == order_refund_assigned['unique_identifier'])
-                    ]
+                    ].iloc[0]
 
                     # 生成credit memo
                     new_row = pd.DataFrame({
@@ -1302,7 +1302,7 @@ def process_events(event_list):
                     # 找到之前这个order在df_invoice里面对应的记录
                     warranty_invoice_line = df_invoice[
                         (df_invoice['unique_identifier'] == order_refund_assigned['unique_identifier'])
-                    ]
+                    ].iloc[0]
 
                     # 生成credit memo
                     new_row = pd.DataFrame({
