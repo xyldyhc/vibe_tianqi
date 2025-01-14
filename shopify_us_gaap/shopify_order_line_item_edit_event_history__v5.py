@@ -442,7 +442,7 @@ def generate_shipping_journal_entry():
             if row['total_shipping'] > 0 :
                 new_row = pd.DataFrame({
                     'transaction_type': ["journal_entry"],
-                    'currency': ["USD United States Dollar"],
+                    'currency': ["USD"],
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"],
                     'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account_name': ["Accounts Receivable (A/R)"],
@@ -467,7 +467,7 @@ def generate_shipping_journal_entry():
                 
                 new_row = pd.DataFrame({
                     'transaction_type': ["journal_entry"],
-                    'currency': ["USD United States Dollar"],
+                    'currency': ["USD"],
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"],
                     'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account_name': ["Amazon and Shopify sales:Shopify shipping income"],
@@ -494,7 +494,7 @@ def generate_shipping_journal_entry():
             elif row['total_shipping'] < 0 :
                 new_row = pd.DataFrame({
                     'transaction_type': ["journal_entry"],
-                    'currency': ["USD United States Dollar"],
+                    'currency': ["USD"],
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"], # SP是shipping的缩写
                     'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account_name': ["Accounts Receivable (A/R)"],
@@ -519,7 +519,7 @@ def generate_shipping_journal_entry():
                 
                 new_row = pd.DataFrame({
                     'transaction_type': ["journal_entry"],
-                    'currency': ["USD United States Dollar"],
+                    'currency': ["USD"],
                     'transaction_name': [f"{row['order_number']}-SP-{row['event_happened_date_pdt'].date()}"], # SP是shipping的缩写
                     'transaction_date': [row['event_happened_date_pdt'].date()],
                     'account_name': ["Amazon and Shopify sales:Shopify shipping income"],
