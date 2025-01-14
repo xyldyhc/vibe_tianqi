@@ -174,10 +174,10 @@ test_orders = [
     'SHO.19830',
     'SHO.15134',
     'SHO.16311',#？没有发货后添加的shipping line的journal entry
-    'SHO.8951',#？warranty没有发送invoice
+    'SHO.8951',
     'SHO.14094',
-    'SHO.16860',#？warranty没有发送invoice
-    'SHO.17405',#？warranty没有发送invoice
+    'SHO.16860',
+    'SHO.17405',
     'SHO.19411',
     'SHO.18158'
 ]
