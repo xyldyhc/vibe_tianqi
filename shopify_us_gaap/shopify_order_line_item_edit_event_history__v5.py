@@ -161,7 +161,7 @@ test_orders = [
     'SHO.1109',
     'SHO.7307',
     'SHO.13117',
-    'SHO.14244',#?
+    'SHO.14244',
     'SHO.16785',
     'SHO.18067',
     'SHO.18078',
@@ -892,16 +892,16 @@ def generate_warranty_invoice_if_no_more_new_board_shipment():
     global df_physical_product_added_tag
 
     # 找到order_new_board_fulfillment_status为Zero New Board Ordered或者Fulfilled的订单
-    all_new_board_shipment_fulfilled_orders = df_physical_product_added[
+    no_more_new_board_shipment_needed_orders = df_physical_product_added[
         (df_physical_product_added['order_new_board_fulfillment_status'] == 'Zero New Board Ordered') |
         (df_physical_product_added['order_new_board_fulfillment_status'] == 'Fulfilled')
     ]['order_id'].unique()
-    all_new_board_shipment_fulfilled_orders = pd.Series(all_new_board_shipment_fulfilled_orders)
+    no_more_new_board_shipment_needed_orders = pd.Series(no_more_new_board_shipment_needed_orders)
     
     # 如果找到符合条件的订单
-    if not all_new_board_shipment_fulfilled_orders.empty:
+    if not no_more_new_board_shipment_needed_orders.empty:
         matching_warranties_added = df_warranty_added[
-            (df_warranty_added['order_id'].isin(all_new_board_shipment_fulfilled_orders)) &
+            (df_warranty_added['order_id'].isin(no_more_new_board_shipment_needed_orders)) &
             (~df_warranty_added['unique_identifier'].isin(
                 df_warranty_added_tag[df_warranty_added_tag['if_refunded'] == True]['unique_identifier'])
             ) &
