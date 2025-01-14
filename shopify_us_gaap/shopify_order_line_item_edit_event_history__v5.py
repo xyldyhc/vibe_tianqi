@@ -592,7 +592,7 @@ def get_line_item_discount(order_line, shipment_row=None, if_check_first_board_n
 def get_custom_product_if_order_first_shipment(shipment_row):
     global df_line_item_discount, df_invoice, df_custom_product_added, df_custom_product_added_tag
     # 如果这是这个订单的第一个shipment的话
-    if shipment_row['order_name'] not in df_invoice['order_name'].values:
+    if shipment_row['order_name'] not in df_invoice[df_invoice['line_type'] != 'SHIPPING']['order_name'].values:
         matching_custom_products_added = df_custom_product_added[
             (df_custom_product_added['order_name'] == shipment_row['order_name']) &
             (df_custom_product_added['event_happened_at_pdt'] <= shipment_row['event_happened_at_pdt']) &
@@ -891,12 +891,15 @@ def generate_warranty_invoice_if_no_more_new_board_shipment():
     global df_warranty_added_tag
     global df_physical_product_added
     global df_physical_product_added_tag
+    global df_line_item_added_drop
 
     # 找到order_new_board_fulfillment_status为Zero New Board Ordered或者Fulfilled的订单
-    no_more_new_board_shipment_needed_orders = df_physical_product_added[
-        (df_physical_product_added['order_new_board_fulfillment_status'] == 'Zero New Board Ordered') |
-        (df_physical_product_added['order_new_board_fulfillment_status'] == 'Fulfilled')
+    # 这里不单独把order_new_board_fulfillment_status作为一张单独的表，而是和本来就要用到的ORDER表join起来，是为了防止order_new_board_fulfillment_status作为一张单独的表run的话会和ORDER表产生时间上的先后，可能会因此发生数据不完全同步
+    no_more_new_board_shipment_needed_orders = df_line_item_added_drop[
+        (df_line_item_added_drop['order_new_board_fulfillment_status'] == "Zero New Board Ordered") |
+        (df_line_item_added_drop['order_new_board_fulfillment_status'] == "Fulfilled")
     ]['order_id'].unique()
+
     no_more_new_board_shipment_needed_orders = pd.Series(no_more_new_board_shipment_needed_orders)
     
     # 如果找到符合条件的订单
