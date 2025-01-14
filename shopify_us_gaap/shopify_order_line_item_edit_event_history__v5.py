@@ -1275,9 +1275,9 @@ def process_events(event_list):
                 if not unshipped_matching_orders.empty:
                     order_refund_assigned = unshipped_matching_orders.loc[unshipped_matching_orders['physical_product_unit_idx'].idxmin()]
 
-                    # 标记df_custom_product_added_tag的if_refunded
+                    # 标记df_warranty_added_tag的if_refunded
                     df_warranty_added_tag = mark_tag(df_warranty_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
-                    # 标记df_custom_product_removed_tag的if_assigned
+                    # 标记df_warranty_removed_tag的if_assigned
                     df_warranty_removed_tag = mark_tag(df_warranty_removed_tag, row, 'if_assigned', 'order_unique_identifier', order_refund_assigned)
 
                 # 如果没有找到未被shipped的order，只能匹配已shipped的order
@@ -1298,10 +1298,10 @@ def process_events(event_list):
                     # shipped_matching_orders不可能为空
                     order_refund_assigned = shipped_matching_orders.loc[shipped_matching_orders['physical_product_unit_idx'].idxmin()]
 
-                    # 标记df_custom_product_added_tag的if_refunded
+                    # 标记df_warranty_added_tag的if_refunded
                     df_warranty_added_tag = mark_tag(df_warranty_added_tag, order_refund_assigned, 'if_refunded', 'refund_unique_identifier', row)
                     # 标记df_custom_product_removed_tag的if_assigned
-                    df_custom_product_removed_tag = mark_tag(df_custom_product_removed_tag, row, 'if_assigned', 'order_unique_identifier', order_refund_assigned)
+                    df_warranty_removed_tag = mark_tag(df_warranty_removed_tag, row, 'if_assigned', 'order_unique_identifier', order_refund_assigned)
 
                     # 找到之前这个order在df_invoice里面对应的记录
                     warranty_invoice_line = df_invoice[
