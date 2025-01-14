@@ -425,7 +425,7 @@ def generate_shipping_journal_entry():
         results = matching_shipping_lines.groupby([
             'order_name', 'order_number', 'customer_name', 'customer_email', 'customer_phone_number',
             'billing_country', 'billing_province', 'billing_city', 'billing_zip', 'billing_address', 'store', 'event_happened_date_pdt'
-        ])['total_price_in_usd'].sum().reset_index()
+        ], dropna=False)['total_price_in_usd'].sum().reset_index()
         results.columns = [
             'order_name', 'order_number', 'customer_name', 'customer_email', 'customer_phone_number',
             'billing_country', 'billing_province', 'billing_city', 'billing_zip', 'billing_address', 'store', 'event_happened_date_pdt', 'total_shipping'
