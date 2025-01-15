@@ -307,7 +307,7 @@ df_invoice = create_or_load_file(
     ['order_name', 'order_id', 'order_created_at_pdt', 'transaction_type', 'transaction_name', 'line_type', 'store', 'transaction_date',
      'shipping_date', 'ship_via', 'tracking_number', 'payment_terms', 'due_date', 'customer_name', 'customer_email', 'customer_phone_number',
      'shipping_country', 'shipping_province', 'shipping_city', 'shipping_zip', 'shipping_address', 'billing_country','billing_province',
-     'billing_city', 'billing_zip', 'billing_address', 'transaction_product_name', 'qty', 'rate', 'amount', 'taxable', 'discount',
+     'billing_city', 'billing_zip', 'billing_address', 'transaction_product_name', 'seller_sku', 'qty', 'rate', 'amount', 'taxable', 'discount',
      'discount_reallocation_target', 'shipping', 'unique_identifier', 'if_sent'
     ]
 )
@@ -318,7 +318,7 @@ df_credit_memo = create_or_load_file(
     'credit_memo.xlsx', 
     ['order_name', 'order_id', 'order_created_at_pdt', 'transaction_type', 'transaction_name', 'line_type', 'store', 'transaction_date',
      'customer_name', 'customer_email', 'customer_phone_number', 'billing_country','billing_province', 'billing_city', 'billing_zip', 'billing_address',
-     'transaction_product_name', 'qty', 'rate', 'amount', 'taxable', 'discount','discount_reallocation_target', 'unique_identifier', 'if_sent'
+     'transaction_product_name', 'seller_sku', 'qty', 'rate', 'amount', 'taxable', 'discount','discount_reallocation_target', 'unique_identifier', 'if_sent'
     ]
 )
 
@@ -642,6 +642,7 @@ def get_custom_product_if_order_first_shipment(shipment_row):
                     'billing_zip': [custom_product_added_row['billing_zip']],
                     'billing_address': [custom_product_added_row['billing_address']],
                     'transaction_product_name': [custom_product_added_row['line_item_name']],
+                    'seller_sku': [custom_product_added_row['seller_sku']],
                     'qty': [1],
                     'rate': [custom_product_added_row['unit_price_in_usd']],
                     'amount': [custom_product_added_row['unit_price_in_usd']],
@@ -731,6 +732,7 @@ def generate_custom_product_invoice():
                 'billing_zip': [custom_product_added_row['billing_zip']],
                 'billing_address': [custom_product_added_row['billing_address']],
                 'transaction_product_name': [custom_product_added_row['line_item_name']],
+                'seller_sku': [custom_product_added_row['seller_sku']],
                 'qty': [1],
                 'rate': [custom_product_added_row['unit_price_in_usd']],
                 'amount': [custom_product_added_row['unit_price_in_usd']],
@@ -806,6 +808,7 @@ def get_warranty_if_new_board_shipment(row):
                 'billing_zip': [warranty_assigned_to_shipment['billing_zip']],
                 'billing_address': [warranty_assigned_to_shipment['billing_address']],
                 'transaction_product_name': [warranty_assigned_to_shipment['line_item_name']],
+                'seller_sku': [warranty_assigned_to_shipment['seller_sku']],
                 'qty': [1],
                 'rate': [warranty_assigned_to_shipment['unit_price_in_usd']],
                 'amount': [warranty_assigned_to_shipment['unit_price_in_usd']],
@@ -871,6 +874,7 @@ def get_warranty_if_new_board_shipment(row):
                     'billing_zip': [warranty_assigned_to_shipment['billing_zip']],
                     'billing_address': [warranty_assigned_to_shipment['billing_address']],
                     'transaction_product_name': [warranty_assigned_to_shipment['line_item_name']],
+                    'seller_sku': [warranty_assigned_to_shipment['seller_sku']],
                     'qty': [1],
                     'rate': [warranty_assigned_to_shipment['unit_price_in_usd']],
                     'amount': [warranty_assigned_to_shipment['unit_price_in_usd']],
@@ -951,6 +955,7 @@ def generate_warranty_invoice_if_no_more_new_board_shipment():
                     'billing_zip': [warranty_added_row['billing_zip']],
                     'billing_address': [warranty_added_row['billing_address']],
                     'transaction_product_name': [warranty_added_row['line_item_name']],
+                    'seller_sku': [warranty_added_row['seller_sku']],
                     'qty': [1],
                     'rate': [warranty_added_row['unit_price_in_usd']],
                     'amount': [warranty_added_row['unit_price_in_usd']],
@@ -1239,6 +1244,7 @@ def process_events(event_list):
                         'billing_zip': [row['billing_zip']],
                         'billing_address': [row['billing_address']],
                         'transaction_product_name': [row['line_item_name']],
+                        'seller_sku': [row['seller_sku']],
                         'qty': [1],
                         'rate': [custom_product_invoice_line['rate']],
                         'amount': [custom_product_invoice_line['amount']],
@@ -1324,6 +1330,7 @@ def process_events(event_list):
                         'billing_zip': [row['billing_zip']],
                         'billing_address': [row['billing_address']],
                         'transaction_product_name': [row['line_item_name']],
+                        'seller_sku': [row['seller_sku']],
                         'qty': [1],
                         'rate': [warranty_invoice_line['rate']],
                         'amount': [warranty_invoice_line['amount']],
