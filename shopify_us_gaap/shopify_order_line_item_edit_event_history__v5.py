@@ -157,30 +157,30 @@ df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_p
 
 # 2-1
 # for test 测试订单
-test_orders = [
-    'SHO.1109',
-    'SHO.7307',
-    'SHO.13117',
-    'SHO.14244',
-    'SHO.16785',
-    'SHO.18067',
-    'SHO.18078',
-    'SHO.17441',
-    'SHO.16442',
-    'SHO.20397',
-    'SHO.20349',
-    'SHO.18876',
-    'SHO.21214',
-    'SHO.19830',
-    'SHO.15134',
-    'SHO.16311',
-    'SHO.8951',
-    'SHO.14094',
-    'SHO.16860',
-    'SHO.17405',
-    'SHO.19411',
-    'SHO.18158'
-]
+# test_orders = [
+#     'SHO.1109',
+#     'SHO.7307',
+#     'SHO.13117',
+#     'SHO.14244',
+#     'SHO.16785',
+#     'SHO.18067',
+#     'SHO.18078',
+#     'SHO.17441',
+#     'SHO.16442',
+#     'SHO.20397',
+#     'SHO.20349',
+#     'SHO.18876',
+#     'SHO.21214',
+#     'SHO.19830',
+#     'SHO.15134',
+#     'SHO.16311',
+#     'SHO.8951',
+#     'SHO.14094',
+#     'SHO.16860',
+#     'SHO.17405',
+#     'SHO.19411',
+#     'SHO.18158'
+# ]
 # SHO.1109：订单下了v1 board和custom product。有一条shipping。没有任何发货记录。应该全部没有相关记录。
 # SHO.7307：订单下了5个产品，有1个产品未发货。有3个产品（包含1个未发货的产品）叠加了两种discount。
 # SHO.13117：发货时间在订单下单之前。有physical product的return记录，会有tag标记，但是不会生成credit memo。
@@ -202,32 +202,32 @@ test_orders = [
 # SHO.18158：有不能map到的warranty
 
 
-df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
-df_shipment = df_shipment[df_shipment['order_name'].isin(test_orders)].reset_index(drop=True)
-df_shipping_line = df_shipping_line[df_shipping_line['order_name'].isin(test_orders)].reset_index(drop=True)
-df_physical_product_added = df_physical_product_added[df_physical_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
-df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
-df_custom_product_added = df_custom_product_added[df_custom_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
-df_custom_product_removed = df_custom_product_removed[df_custom_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
-df_warranty_added = df_warranty_added[df_warranty_added['order_name'].isin(test_orders)].reset_index(drop=True)
-df_warranty_removed = df_warranty_removed[df_warranty_removed['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_all_events = df_all_events[df_all_events['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_shipment = df_shipment[df_shipment['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_shipping_line = df_shipping_line[df_shipping_line['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_physical_product_added = df_physical_product_added[df_physical_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_custom_product_added = df_custom_product_added[df_custom_product_added['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_custom_product_removed = df_custom_product_removed[df_custom_product_removed['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_warranty_added = df_warranty_added[df_warranty_added['order_name'].isin(test_orders)].reset_index(drop=True)
+# df_warranty_removed = df_warranty_removed[df_warranty_removed['order_name'].isin(test_orders)].reset_index(drop=True)
 
 
 # 2-2
 # 选择日期范围内的订单
-# df_all_events_for_date_filter = pd.concat([df_shipment, df_shipping_line, df_physical_product_added, df_physical_product_removed, df_custom_product_added, df_custom_product_removed, df_warranty_added, df_warranty_removed], axis=0, ignore_index=True)
-# date_range = pd.date_range(start='2024-09-01', end='2024-09-30').date
-# order_id_update_range = df_all_events_for_date_filter[df_all_events_for_date_filter['event_happened_at_pdt'].dt.date.isin(date_range)]['order_id'].unique()
+df_all_events_for_date_filter = pd.concat([df_shipment, df_shipping_line, df_physical_product_added, df_physical_product_removed, df_custom_product_added, df_custom_product_removed, df_warranty_added, df_warranty_removed], axis=0, ignore_index=True)
+date_range = pd.date_range(start='2024-09-01', end='2024-09-30').date
+order_id_update_range = df_all_events_for_date_filter[df_all_events_for_date_filter['event_happened_at_pdt'].dt.date.isin(date_range)]['order_id'].unique()
 
-# df_all_events = df_all_events[df_all_events['order_id'].isin(order_id_update_range)]
-# df_shipment = df_shipment[df_shipment['order_id'].isin(order_id_update_range)]
-# df_shipping_line = df_shipping_line[df_shipping_line['order_id'].isin(order_id_update_range)]
-# df_physical_product_added = df_physical_product_added[df_physical_product_added['order_id'].isin(order_id_update_range)]
-# df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_id'].isin(order_id_update_range)]
-# df_custom_product_added = df_custom_product_added[df_custom_product_added['order_id'].isin(order_id_update_range)]
-# df_custom_product_removed = df_custom_product_removed[df_custom_product_removed['order_id'].isin(order_id_update_range)]
-# df_warranty_added = df_warranty_added[df_warranty_added['order_id'].isin(order_id_update_range)]
-# df_warranty_removed = df_warranty_removed[df_warranty_removed['order_id'].isin(order_id_update_range)]
+df_all_events = df_all_events[df_all_events['order_id'].isin(order_id_update_range)]
+df_shipment = df_shipment[df_shipment['order_id'].isin(order_id_update_range)]
+df_shipping_line = df_shipping_line[df_shipping_line['order_id'].isin(order_id_update_range)]
+df_physical_product_added = df_physical_product_added[df_physical_product_added['order_id'].isin(order_id_update_range)]
+df_physical_product_removed = df_physical_product_removed[df_physical_product_removed['order_id'].isin(order_id_update_range)]
+df_custom_product_added = df_custom_product_added[df_custom_product_added['order_id'].isin(order_id_update_range)]
+df_custom_product_removed = df_custom_product_removed[df_custom_product_removed['order_id'].isin(order_id_update_range)]
+df_warranty_added = df_warranty_added[df_warranty_added['order_id'].isin(order_id_update_range)]
+df_warranty_removed = df_warranty_removed[df_warranty_removed['order_id'].isin(order_id_update_range)]
 
 
 # 3
