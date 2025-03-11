@@ -15,6 +15,7 @@ gs_client = gspread.service_account(filename='editor_credentials.json')
 
 spreadsheet_id = '1bwrj3Snv9xzukUjn18aRIx6zxz0_q7SnAAnX7gbHyTI'
 workbook = gs_client.open_by_key(spreadsheet_id)
+# url = https://docs.google.com/spreadsheets/d/1bwrj3Snv9xzukUjn18aRIx6zxz0_q7SnAAnX7gbHyTI/edit?usp=sharing
 
 # value_list = sheet.sheet1.row_values(1)
 # print(value_list)
