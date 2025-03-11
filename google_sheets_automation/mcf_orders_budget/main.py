@@ -39,4 +39,4 @@ for row in mcf_budget_data[1:]:
 # 使用第一行作为列名
 df_mcf_budget_data = pd.DataFrame(mcf_budget_data[1:], columns=mcf_budget_data[0])
 unpivoted_df_mcf_budget_data = df_mcf_budget_data.melt(id_vars=[df_mcf_budget_data.columns[0]], var_name='budget_month', value_name='budget_qty')
-print(unpivoted_df_mcf_budget_data)
+unpivoted_df_mcf_budget_data.to_csv('unpivoted_mcf_budget_data.csv', index=False)
