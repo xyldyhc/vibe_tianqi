@@ -23,8 +23,6 @@ df_line_item_added_raw = pd.read_excel(
            'product_id': str,
            'variant_id': str,
            'taxable': bool,
-           'quantity_added_for_each_line_item': int,
-           #quantity_added_for_each_line_item没必要的话可以删去
            'line_item_unit_idx': int,
            'physical_product_unit_idx': int},
     parse_dates=['order_created_at_pdt', 'due_date', 'event_happened_at_pdt']
@@ -68,8 +66,6 @@ df_line_item_removed_raw = pd.read_excel(
            'line_item_idx': int,
            'product_id': str,
            'variant_id': str,
-           'quantity_removed_for_each_line_item': int,
-           #quantity_removed_for_each_line_item没必要的话可以删去
            'line_item_removed_unit_idx': int},
     parse_dates=['order_created_at_pdt', 'event_happened_at_pdt']
 )
@@ -124,6 +120,7 @@ df_line_item_discount = pd.read_excel(
            'product_id': str,
            'variant_id': str,
            'line_item_id': str,
+           'line_item_idx': int,
            'order_discount_application_idx': int}
 )
 #discount不需要tag文件,直接读取即可
@@ -184,7 +181,7 @@ df_all_events = pd.concat([df_shipment, df_physical_product_removed, df_custom_p
 # SHO.1109：订单下了v1 board和custom product。有一条shipping。没有任何发货记录。应该全部没有相关记录。
 # SHO.7307：订单下了5个产品，有1个产品未发货。有3个产品（包含1个未发货的产品）叠加了两种discount。
 # SHO.13117：发货时间在订单下单之前。有physical product的return记录，会有tag标记，但是不会生成credit memo。
-# SHO.14244：发货之前给C1A退款了。warranty以map不到板子的形式（custom product）存在。有first board的discount，订单总共有1个板子。
+# SHO.14244：发货之前给C1A退款了换成了C1B，sales计算了能够保留全部discount的金额。warranty以map不到板子的形式（custom product）存在。有first board的discount，订单总共有1个板子。
 # SHO.18067：正常下单后发货。没有first board的discount。
 # SHO.18078：下单了1个板子和1个支架，还有1个能map到板子的warranty。下单后全部完成了发货（此时应该有3条invoice）。然后把下单的3样东西全退款了（此时应该生成warranty的credit memo），又重新加了回来（此时生成新加进来的warranty的invoice）。
 # SHO.17441：0元的influencer订单
@@ -308,7 +305,7 @@ df_invoice = create_or_load_file(
      'shipping_date', 'ship_via', 'tracking_number', 'payment_terms', 'due_date', 'customer_name', 'customer_email', 'customer_phone_number',
      'shipping_country', 'shipping_province', 'shipping_city', 'shipping_zip', 'shipping_address', 'billing_country','billing_province',
      'billing_city', 'billing_zip', 'billing_address', 'transaction_product_name', 'seller_sku', 'qty', 'rate', 'amount', 'taxable', 'discount',
-     'discount_reallocation_target', 'shipping', 'unique_identifier', 'if_sent'
+     'discount_reallocation_target', 'shipping', 'line_item_id', 'unique_identifier', 'if_sent'
     ]
 )
 # df_invoice里的不同的line_type会对应不同的unique_identifier，df_invoice里的line_type+unique_identifier也是unique的
@@ -549,12 +546,33 @@ def generate_shipping_journal_entry():
 
 def get_line_item_discount(order_line, shipment_row=None, if_check_first_board_needed=False):
     global df_line_item_discount, df_invoice
-    df_non_first_board_discount_lines = df_line_item_discount[
+    # 找出直接归属到line item的discount
+    df_non_first_board_or_line_item_discount_lines = df_line_item_discount[
         (df_line_item_discount['order_name'] == order_line['order_name']) &
-        (df_line_item_discount['line_item_id'] == order_line['line_item_id'])
+        (df_line_item_discount['line_item_id'] == order_line['line_item_id']) &
+        (df_line_item_discount['discount_reallocation_target'] == "line_item")
     ]
-    non_first_board_discount = df_non_first_board_discount_lines['total_discount_in_usd'].sum() # 如果non_first_board_discount_lines为空，sum()会返回0
+    non_first_board_or_line_item_discount = df_non_first_board_or_line_item_discount_lines['total_discount_in_usd'].sum() # 如果df_non_first_board_or_line_item_discount_lines为空，sum()会返回0
+
+    # 找出归属到first line item的discount
+    df_first_line_item_discount_lines = df_line_item_discount[
+        (df_line_item_discount['order_name'] == order_line['order_name']) &
+        (df_line_item_discount['line_item_id'] == order_line['line_item_id']) &
+        (df_line_item_discount['discount_reallocation_target'] == "first_line_item")
+    ]
+    if not df_first_line_item_discount_lines.empty:
+        existing_first_line_item_discount_in_invoice = df_invoice[
+            (df_invoice['order_name'] == order_line['order_name']) &
+            (df_invoice['line_item_id'] == order_line['line_item_id']) &
+            (df_invoice['discount_reallocation_target'].str.contains('first_line_item', case=False, na=False))
+        ]
+        first_line_item_discount = df_first_line_item_discount_lines['total_discount_in_usd'].sum() # 如果df_first_line_item_discount_lines为空，sum()会返回0
+        if existing_first_line_item_discount_in_invoice.empty:
+            non_first_board_discount = non_first_board_or_line_item_discount + first_line_item_discount
+    else:
+        non_first_board_discount = non_first_board_or_line_item_discount
     
+    # 找出归属到first board的discount
     # 如果这个shipment row的产品是board产品的话
     if if_check_first_board_needed and 'board' in shipment_row['product_name'].lower():
         matching_first_board_discount_line = df_line_item_discount[
@@ -563,7 +581,7 @@ def get_line_item_discount(order_line, shipment_row=None, if_check_first_board_n
         ]
         # 如果这个shipment_row的订单包含first_board的discount的话
         if not matching_first_board_discount_line.empty:
-            matching_first_board_discount_line = matching_first_board_discount_line.iloc[0]
+            matching_first_board_discount_line = matching_first_board_discount_line.iloc[0] # test
         
             existing_first_board_discount_in_invoice = df_invoice[
                 (df_invoice['order_name'] == shipment_row['order_name']) &
@@ -571,20 +589,36 @@ def get_line_item_discount(order_line, shipment_row=None, if_check_first_board_n
             ]
             # 如果这个first_board的discount已经在invoice里生成过的话
             if not existing_first_board_discount_in_invoice.empty:
-                total_discount = non_first_board_discount
-                total_discount_type = "line_item"
+                if first_line_item_discount == 0:
+                    total_discount = non_first_board_discount
+                    total_discount_type = "line_item"
+                else:
+                    total_discount = non_first_board_discount
+                    total_discount_type = "first_line_item"
             # 如果这个first_board的discount没有在invoice里生成过的话
             else:
-                total_discount = non_first_board_discount + matching_first_board_discount_line['total_discount_in_usd']
-                total_discount_type = "first_board"
+                if first_line_item_discount == 0:
+                    total_discount = non_first_board_discount + matching_first_board_discount_line['total_discount_in_usd']
+                    total_discount_type = "first_board"
+                else:
+                    total_discount = non_first_board_discount + matching_first_board_discount_line['total_discount_in_usd']
+                    total_discount_type = "first_line_item_and_first_board"
         # 如果这个shipment_row的订单不包含first_board的discount的话
         else:
-            total_discount = non_first_board_discount
-            total_discount_type = "line_item"
+            if first_line_item_discount == 0:
+                total_discount = non_first_board_discount
+                total_discount_type = "line_item"
+            else:
+                total_discount = non_first_board_discount
+                total_discount_type = "first_line_item"
     # 如果这个shipment row的产品不是board产品的话
     else:
-        total_discount = non_first_board_discount
-        total_discount_type = "line_item"
+        if first_line_item_discount == 0:
+            total_discount = non_first_board_discount
+            total_discount_type = "line_item"
+        else:
+            total_discount = non_first_board_discount
+            total_discount_type = "first_line_item"
     return total_discount, total_discount_type
 
 
