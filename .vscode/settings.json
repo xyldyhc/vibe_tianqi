@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 500,
+            "server": "localhost",
+            "port": 5439,
+            "driver": "Redshift Driver (Dedicated ver)",
+            "name": "vibe-cdp",
+            "database": "vibe-cdp",
+            "username": "looker",
+            "password": "kTKf7-QY6JWNirB7-JWL"
+        }
+    ]
+}
